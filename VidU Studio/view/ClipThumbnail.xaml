@@ -1,0 +1,45 @@
+﻿<UserControl
+    x:Class="VidU_Studio.view.ClipThumbnail"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:VidU_Studio.view"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="120"
+    d:DesignWidth="160">
+
+    <Grid>
+        <Border Width="160" Height="120">
+            <Image
+                Source="{x:Bind ImageSource}" 
+                Stretch="UniformToFill"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                UseLayoutRounding="False"/>
+        </Border>
+        <Grid VerticalAlignment="Bottom" 
+              HorizontalAlignment="Left"
+              Background="#44000000" 
+              CornerRadius="5">
+            <SymbolIcon Margin="5" 
+                        Symbol="{x:Bind TypeIcon}"
+                        Visibility="{x:Bind TypeIconVisibility}"/>
+        </Grid>
+        <Grid Background="#44000000" 
+              VerticalAlignment="Bottom" 
+              HorizontalAlignment="Right"
+              CornerRadius="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <SymbolIcon Margin="5" Grid.Column="0"
+                        Symbol="Clock"
+                        Visibility="{x:Bind TypeIconVisibility}"/>
+            <TextBlock Grid.Column="1" Margin="4"
+                       Text="{x:Bind ClipVM.Duration, Mode=OneWay}"
+                       VerticalAlignment="Center"/>
+        </Grid>
+    </Grid>
+</UserControl>

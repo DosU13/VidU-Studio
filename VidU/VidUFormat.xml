@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!-- All time are saved in seconds distinct from MuzU, Microseconds feels precise or readable (cause it is not decimal) 
+		but most of time it needs to cast into seconds, so for this time I am just trying seconds -->
+<MuzU>
+	<Name>Geoxor - Moonlight</Name>
+	<MuzUPath>Here path, only needed while editing, so itn't needed while using with Light version</MuzUPath>
+	<MusicPath>C:\Users\dosla\Music\2020 05\Geoxor - Moonlight.mp3</MusicPath>
+	<MusicAllign_μs>2670241</MusicAllign_μs>
+	<BPM>Default 60 to make as time</BPM>
+	<BeatsPerBar>Default: if(BPM==60) 60 to make as time else 4</BeatsPerBar>
+	<MediaClips>
+		<list count="3"> 
+			<item-0>
+				<ImageClip>
+					<Path></Path>
+					<Duration></Duration>
+					<Effects>
+						<list count="1">
+							<item-0>
+								<Effect>
+									<Definition></Definition>
+									<Timings>
+										<list/>
+									</Timings>
+									<Parameters>
+										<list count="2">
+											<item-0>
+												<Parameter>
+													<Name></Name>
+													<Value></Value>
+												</Parameter>
+											</item-0>
+											<item-1>
+												<Parameter>
+													<Name></Name>
+													<Values>
+														<list/>
+													</Values>
+												</Parameter>
+											</item-1>
+										</list>
+									</Parameters>
+								</Effect>
+							</item-0>
+						</list>
+					</Effects>
+				</ImageClip>
+			</item-0>
+			<item-1>
+				<VideoClip>
+					<Path></Path>
+					<Duration></Duration>
+					<TrimFromStart></TrimFromStart>
+					<TrimDuration>if null it's equal to Duration and it will be played only once</TrimDuration>
+					<Effects>
+						<list/>
+					</Effects>
+				</VideoClip>
+			</item-1>
+			<item-2>
+				<GroupClip>
+					<Duration></Duration>
+					<Paths>
+						<list/>
+					</Paths>
+					<Timings>
+						<List>timings with indexes(if indexes null so it's incremental)</List>
+					</Timings>
+					<Effects>
+					</Effects>
+				</GroupClip>
+			</item-2>
+		</list>
+	</MediaClips>
+</MuzU>

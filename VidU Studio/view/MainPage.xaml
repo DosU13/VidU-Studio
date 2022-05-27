@@ -1,0 +1,161 @@
+﻿<Page
+    x:Class="VidU_Studio.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:view="using:VidU_Studio.view"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+
+        <Style x:Key="TransparentTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+
+        <Style x:Key="ListViewFitWidth" TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right" 
+                    IsSticky="True" VerticalContentAlignment="Center">
+            <AppBarButton Icon="MusicInfo" Label="Music/MuzU" Click="MusicMuzU_Click"
+                          IsEnabled="{x:Bind existProject}"/>
+            <AppBarButton Label="🎼 BPM" Click="BPM_Click"
+                          IsEnabled="{x:Bind existProject}"/>
+            <AppBarSeparator/>
+            <AppBarButton Icon="Share" Label="Finish Video" Click="FinishVideo_Click"
+                          IsEnabled="{x:Bind existProject}"/>
+            <AppBarButton Icon="Save" Label="Save" Click="Save_Click"
+                          IsEnabled="{x:Bind existProject}"/>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Icon="Add" Label="New Empty" Click="NewEmpty_Click">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="N" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarSeparator/>
+                <AppBarButton Icon="OpenFile" Label="Open" Click="Open_Click">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="O" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarSeparator/>
+                <AppBarButton Icon="Save" Label="Save" Click="Save_Click"
+                              IsEnabled="{x:Bind existProjectFile}">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control"  Key="S" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton Icon="SaveLocal" Label="Save as" Click="SaveAs_Click"
+                              IsEnabled="{x:Bind existProject}">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift"  Key="S" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <MediaPlayerElement x:Name="mediaPlayerElement"
+                                AutoPlay="False"
+                                AreTransportControlsEnabled="True"/>
+            <view:Storyboard Grid.Row="1" Grid.ColumnSpan="2" 
+                             x:Name="Storyboard"/>
+            <controls:Expander Grid.Row="0" Grid.Column="1"
+                               VerticalAlignment="Top"
+                               Header="Properties"
+                               IsExpanded="True" ExpandDirection="Left">
+                <controls:Expander.HeaderStyle>
+                    <Style TargetType="ToggleButton">
+                    </Style>
+                </controls:Expander.HeaderStyle>
+                <TextBlock Text="Properties content"
+                           Width="500"/>
+            </controls:Expander>
+            <view:GroupMediaView Grid.Row="2" Grid.ColumnSpan="2" 
+                                 x:Name="GroupMediaView" 
+                                 Visibility="{x:Bind CompositionModel.VisibilityIfGroup, Mode=OneWay}"/>
+        </Grid>
+
+        <ContentDialog 
+            x:Name="MusicMuzUContentDialog"
+            PrimaryButtonText="Ok">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Row="0" Grid.Column="0" Margin="5"
+                        Content="Select MuzU" HorizontalAlignment="Stretch"
+                        Click="SelectMuzU_Click"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Margin="5"
+                           Text="{x:Bind Project.data.MuzUPath}" 
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center"/>
+                <Button Grid.Row="1" Grid.Column="0" Margin="5"
+                        Content="Select Music" HorizontalAlignment="Stretch"
+                        Click="SelectMusic_Click"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Margin="5"
+                           TextWrapping="Wrap"
+                           Text="{x:Bind Project.data.MusicPath}" 
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Margin="5"
+                           Text="MusicAllign(sec)" 
+                           VerticalAlignment="Center"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="5"
+                         Text="{x:Bind CompositionModel.MusicAllignSec, Mode=TwoWay}" 
+                         InputScope="Number"/>
+            </Grid>
+        </ContentDialog>
+
+        <ContentDialog 
+            x:Name="BPMContentDialog"
+            PrimaryButtonText="Ok">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Margin="5"
+                           Text="BPM" 
+                           VerticalAlignment="Center"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="5"
+                         Text="{x:Bind Project.data.BPM, Mode=TwoWay}" 
+                         InputScope="Number"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Margin="5"
+                           Text="BeatsPerBar" 
+                           VerticalAlignment="Center"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="5"
+                         Text="{x:Bind Project.data.BeatsPerBar, Mode=TwoWay}" 
+                         InputScope="Digits"/>
+            </Grid>
+        </ContentDialog>
+    </Grid>
+</Page>
