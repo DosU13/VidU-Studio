@@ -121,7 +121,16 @@
     </Compile>
     <Compile Include="Common\BindableBase.cs" />
     <Compile Include="model\CompositionModel.cs" />
-    <Compile Include="util\TimingCreator.cs" />
+    <Compile Include="model\EffectsModel.cs" />
+    <Compile Include="util\IChildItemRemove.cs" />
+    <Compile Include="util\IMainPage.cs" />
+    <Compile Include="util\IStoryBoard.cs" />
+    <Compile Include="util\SecondsBeatConverter.cs" />
+    <Compile Include="viewmodel\EffectViewModel.cs" />
+    <Compile Include="viewmodel\MusicViewModel.cs" />
+    <Compile Include="viewmodel\ProjectRepoViewModel.cs" />
+    <Compile Include="viewmodel\StoryBoardViewModel.cs" />
+    <Compile Include="util\ITimingCreator.cs" />
     <Compile Include="util\Util.cs" />
     <Compile Include="viewmodel\ClipViewModel.cs" />
     <Compile Include="viewmodel\MainViewModel.cs" />
@@ -130,6 +139,9 @@
     <Compile Include="viewmodel\SingleClipViewModel.cs" />
     <Compile Include="util\WindowTitle.cs" />
     <Compile Include="viewmodel\StringViewModel.cs" />
+    <Compile Include="view\NormTimingsDialog.xaml.cs">
+      <DependentUpon>NormTimingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="view\AddGroupDialog.xaml.cs">
       <DependentUpon>AddGroupDialog.xaml</DependentUpon>
     </Compile>
@@ -145,6 +157,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="view\GroupMediaView.xaml.cs">
       <DependentUpon>GroupMediaView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="view\RangeSlider.xaml.cs">
+      <DependentUpon>RangeSlider.xaml</DependentUpon>
     </Compile>
     <Compile Include="view\Storyboard.xaml.cs">
       <DependentUpon>Storyboard.xaml</DependentUpon>
@@ -170,6 +185,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="view\NormTimingsDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="view\AddGroupDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -190,6 +209,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="view\RangeSlider.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="view\Storyboard.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -207,6 +230,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\VidUVideoEffects\VidUVideoEffects.csproj">
+      <Project>{64c1515f-68f2-4a5b-87f2-735e8849e75b}</Project>
+      <Name>VidUVideoEffects</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\MuzU Studio\MuzU\MuzU.csproj">
       <Project>{D53EC5C1-F4BC-49D4-A442-BBFD44C61BED}</Project>
       <Name>MuzU</Name>

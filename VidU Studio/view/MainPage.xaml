@@ -6,11 +6,71 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:view="using:VidU_Studio.view"
+    xmlns:util="using:VidU_Studio.util"
+    xmlns:model="using:VidU_Studio.model"
+    xmlns:vm="using:VidU_Studio.viewmodel"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
+        <util:SecondsBeatConverter x:Key="SecondsBeatConverter"/>
 
+        <Style x:Key="ListViewFullWidth" TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+
+        <DataTemplate x:Key="EffectsListItemTemplate" x:DataType="vm:EffectViewModel">
+            <Grid HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{x:Bind Name}"/>
+                <Button Grid.Column="1" Content="MuzU" Margin="5,0" Click="EffectMuzU_Click"/>
+                <Button Grid.Column="2" Click="{x:Bind Remove}" Margin="5,0"><SymbolIcon Symbol="Delete"/></Button>
+                <ListView Grid.Row="1" Grid.ColumnSpan="3" SelectionMode="None"
+                          ItemsSource="{x:Bind Properties}"
+                          ItemTemplate="{StaticResource PropertyListItemTemplate}"
+                          ItemContainerStyle="{StaticResource ListViewFullWidth}"/>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="PropertyListItemTemplate" x:DataType="vm:EffectPropertyViewModel">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{x:Bind Name}" Margin="5"/>
+                <controls:RangeSelector Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"  Margin="5"
+                                        Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}" 
+                                        Maximum="{x:Bind Maximum}" Minimum="{x:Bind Minimum}" 
+                                        RangeEnd="{x:Bind MaxValue, Mode=TwoWay}" 
+                                        RangeStart="{x:Bind MinValue, Mode=TwoWay}"
+                                        StepFrequency="0.001"/>
+                <Slider Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"  Margin="5"
+                        Visibility="{x:Bind VisibilityIfMuzUOff, Mode=OneWay}" StepFrequency="0.001"
+                        Minimum="{x:Bind Minimum}" Maximum="{x:Bind Maximum}"
+                        Value="{x:Bind Value, Mode=TwoWay}"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="TransitionType" Margin="5"
+                           Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"/>
+                <ComboBox Grid.Row="1" Grid.Column="2"  Margin="5"
+                          Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"
+                          ItemsSource="{x:Bind model:EffectsModel.TransitionTypes}"
+                          SelectedItem="{x:Bind TransitionType, Mode=TwoWay}"/>
+            </Grid> 
+        </DataTemplate>
+        
         <Style x:Key="TransparentTextBox" TargetType="TextBox">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
@@ -29,35 +89,47 @@
         <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right" 
                     IsSticky="True" VerticalContentAlignment="Center">
             <AppBarButton Icon="MusicInfo" Label="Music/MuzU" Click="MusicMuzU_Click"
-                          IsEnabled="{x:Bind existProject}"/>
-            <AppBarButton Label="🎼 BPM" Click="BPM_Click"
-                          IsEnabled="{x:Bind existProject}"/>
+                          IsEnabled="{x:Bind ProjectRepoVM.ExistProject}"/>
+            <AppBarButton Label="🎼 BPM" AllowFocusOnInteraction ="True"
+                          IsEnabled="{x:Bind ProjectRepoVM.ExistProject}">
+                <AppBarButton.Flyout>
+                    <Flyout Placement="Bottom">
+                        <TextBox Text="{x:Bind MainVM.BPM, Mode=TwoWay}"
+                                     InputScope="Number"/>
+                    </Flyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
             <AppBarSeparator/>
             <AppBarButton Icon="Share" Label="Finish Video" Click="FinishVideo_Click"
-                          IsEnabled="{x:Bind existProject}"/>
-            <AppBarButton Icon="Save" Label="Save" Click="Save_Click"
-                          IsEnabled="{x:Bind existProject}"/>
+                          IsEnabled="{x:Bind ProjectRepoVM.ExistProject}"/>
+            <AppBarButton Icon="Save" Label="Save" 
+                          Click="{x:Bind ProjectRepoVM.Save}"
+                          IsEnabled="{x:Bind ProjectRepoVM.ExistProject}"/>
             <CommandBar.SecondaryCommands>
-                <AppBarButton Icon="Add" Label="New Empty" Click="NewEmpty_Click">
+                <AppBarButton Icon="Add" Label="New Empty" 
+                              Click="{x:Bind ProjectRepoVM.NewEmpty}">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="N" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton Icon="OpenFile" Label="Open" Click="Open_Click">
+                <AppBarButton Icon="OpenFile" Label="Open" 
+                              Click="{x:Bind ProjectRepoVM.Open}">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="O" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
                 <AppBarSeparator/>
-                <AppBarButton Icon="Save" Label="Save" Click="Save_Click"
-                              IsEnabled="{x:Bind existProjectFile}">
+                <AppBarButton Icon="Save" Label="Save" 
+                              Click="{x:Bind ProjectRepoVM.Save}"
+                              IsEnabled="{x:Bind ProjectRepoVM.ExistProjectFile}">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control"  Key="S" />
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton Icon="SaveLocal" Label="Save as" Click="SaveAs_Click"
-                              IsEnabled="{x:Bind existProject}">
+                <AppBarButton Icon="SaveLocal" Label="Save as"
+                              Click="{x:Bind ProjectRepoVM.SaveAs}"
+                              IsEnabled="{x:Bind ProjectRepoVM.ExistProject}">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control,Shift"  Key="S" />
                     </AppBarButton.KeyboardAccelerators>
@@ -79,20 +151,40 @@
                                 AreTransportControlsEnabled="True"/>
             <view:Storyboard Grid.Row="1" Grid.ColumnSpan="2" 
                              x:Name="Storyboard"/>
-            <controls:Expander Grid.Row="0" Grid.Column="1"
-                               VerticalAlignment="Top"
-                               Header="Properties"
-                               IsExpanded="True" ExpandDirection="Left">
-                <controls:Expander.HeaderStyle>
-                    <Style TargetType="ToggleButton">
-                    </Style>
-                </controls:Expander.HeaderStyle>
-                <TextBlock Text="Properties content"
-                           Width="500"/>
-            </controls:Expander>
+            <Grid Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ToggleButton Grid.Column="0" VerticalAlignment="Stretch" 
+                              Content="||" Visibility="Collapsed"/>
+                <Grid Grid.Column="1" Width="500" Visibility="Visible"
+                      VerticalAlignment="Top">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width=".7*"/>
+                        <ColumnDefinition Width=".3*"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="AddEffectComboBox" Margin="5" VerticalAlignment="Top" 
+                            ItemsSource="{x:Bind model:EffectsModel.EffectNames}" 
+                            SelectedIndex="0"/>
+                    <Button Grid.Column="1" Margin="5" VerticalAlignment="Top"
+                        Content="Add Effect" Click="AddEffect_Click"/>
+                    <ListView Grid.Row="1" Grid.ColumnSpan="2" SelectionMode="None"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.VerticalScrollMode="Auto"
+                              HorizontalAlignment="Stretch"
+                              ItemContainerStyle="{StaticResource ListViewFullWidth}"
+                              ItemsSource="{x:Bind StoryBoardVM.SelectedClip.EffectVMs, Mode=OneWay}"
+                              ItemTemplate="{StaticResource EffectsListItemTemplate}"/>
+                </Grid>
+            </Grid>
             <view:GroupMediaView Grid.Row="2" Grid.ColumnSpan="2" 
                                  x:Name="GroupMediaView" 
-                                 Visibility="{x:Bind CompositionModel.VisibilityIfGroup, Mode=OneWay}"/>
+                                 Visibility="{x:Bind StoryBoardVM.VisibilityIfGroup, Mode=OneWay}"/>
         </Grid>
 
         <ContentDialog 
@@ -110,52 +202,84 @@
                 </Grid.ColumnDefinitions>
                 <Button Grid.Row="0" Grid.Column="0" Margin="5"
                         Content="Select MuzU" HorizontalAlignment="Stretch"
-                        Click="SelectMuzU_Click"/>
+                        Click="{x:Bind MainVM.OpenMuzUFilePicker}"/>
                 <TextBlock Grid.Row="0" Grid.Column="1" Margin="5"
-                           Text="{x:Bind Project.data.MuzUPath}" 
+                           Text="{x:Bind MainVM.MuzUPath, Mode=OneWay}" 
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"/>
                 <Button Grid.Row="1" Grid.Column="0" Margin="5"
                         Content="Select Music" HorizontalAlignment="Stretch"
-                        Click="SelectMusic_Click"/>
+                        Click="{x:Bind MusicVM.OpenMusicFilePicker}"/>
                 <TextBlock Grid.Row="1" Grid.Column="1" Margin="5"
                            TextWrapping="Wrap"
-                           Text="{x:Bind Project.data.MusicPath}" 
+                           Text="{x:Bind MusicVM.MusicPath, Mode=OneWay}" 
                            VerticalAlignment="Center"/>
                 <TextBlock Grid.Row="2" Grid.Column="0" Margin="5"
                            Text="MusicAllign(sec)" 
                            VerticalAlignment="Center"/>
                 <TextBox Grid.Row="2" Grid.Column="1" Margin="5"
-                         Text="{x:Bind CompositionModel.MusicAllignSec, Mode=TwoWay}" 
+                         Text="{x:Bind MusicVM.MusicAllignSec, Mode=TwoWay}" 
                          InputScope="Number"/>
             </Grid>
         </ContentDialog>
 
         <ContentDialog 
-            x:Name="BPMContentDialog"
-            PrimaryButtonText="Ok">
+            x:Name="FinishYourVideoDialog"
+            Title="Finish your video"
+            PrimaryButtonText="Export"
+            CloseButtonText="Cancel">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Margin="5"
-                           Text="BPM" 
-                           VerticalAlignment="Center"/>
-                <TextBox Grid.Row="0" Grid.Column="1" Margin="5"
-                         Text="{x:Bind Project.data.BPM, Mode=TwoWay}" 
-                         InputScope="Number"/>
-                <TextBlock Grid.Row="1" Grid.Column="0" Margin="5"
-                           Text="BeatsPerBar" 
-                           VerticalAlignment="Center"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Margin="5"
-                         Text="{x:Bind Project.data.BeatsPerBar, Mode=TwoWay}" 
-                         InputScope="Digits"/>
+                <TextBlock Text="VideoQuality"/>
+                <ComboBox Grid.Row="1" x:Name="VideoQualityComboBox" 
+                          SelectedIndex="0" HorizontalAlignment="Stretch" >
+                    <ComboBoxItem>
+                        <RichTextBlock IsTextSelectionEnabled="False">
+                            <Paragraph>
+                                <Run Foreground="White" Text="High"/>
+                                <Run Foreground="LightGray" Text="1080p (recommended)"/>
+                            </Paragraph>
+                        </RichTextBlock>
+                    </ComboBoxItem>
+                    <ComboBoxItem>
+                        <RichTextBlock IsTextSelectionEnabled="False">
+                            <Paragraph>
+                                <Run Foreground="White" Text="Medium"/>
+                                <Run Foreground="LightGray" Text="720p"/>
+                            </Paragraph>
+                        </RichTextBlock>
+                    </ComboBoxItem>
+                    <ComboBoxItem>
+                        <RichTextBlock IsTextSelectionEnabled="False">
+                            <Paragraph>
+                                <Run Foreground="White" Text="Low"/>
+                                <Run Foreground="LightGray" Text="480p (smallest file size)"/>
+                            </Paragraph>
+                        </RichTextBlock>
+                    </ComboBoxItem>
+                </ComboBox>
+                <CheckBox Grid.Row="2" x:Name="FastEncodingCheckBox" 
+                          Margin="0,10,0,0" IsChecked="True">
+                    <RichTextBlock IsTextSelectionEnabled="False">
+                        <Paragraph Foreground="White" FontSize="14">
+                            Use hardware-accelerated encoding</Paragraph>
+                        <Paragraph Foreground="Gray" FontSize="11" >
+                            Makes exporting faster. Try turning this off if you</Paragraph>
+                        <Paragraph Foreground="Gray" FontSize="11" >
+                            see pink or colored glitches in exported videos</Paragraph>
+                    </RichTextBlock>
+                </CheckBox>
             </Grid>
+        </ContentDialog>
+
+        <ContentDialog
+            Title="Exporting..."
+            x:Name="RenderProgressDialog">
+            <ProgressBar x:Name="RenderProgressBar" Value="0"/>
         </ContentDialog>
     </Grid>
 </Page>

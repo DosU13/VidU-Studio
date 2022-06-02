@@ -17,7 +17,6 @@ namespace VidU.data
         public string MusicPath { get; set; }
         public double MusicAllignSec { get; set; } = 0;
         public double BPM { get; set; } = 60;
-        public int BeatsPerBar { get; set; } = 4;
         public List<BaseClip> Clips { get; set; } = new List<BaseClip>();
 
         internal override XElement ToXElement()
@@ -28,7 +27,6 @@ namespace VidU.data
                             new XElement(nameof(MusicPath), MusicPath),
                             new XElement(nameof(MusicAllignSec), MusicAllignSec),
                             new XElement(nameof(BPM), BPM),
-                            new XElement(nameof(BeatsPerBar), BeatsPerBar),
                             new XElement(nameof(Clips), XmlConverter.ListToElement(Clips)));
             return ThisElement;
         }
@@ -41,7 +39,6 @@ namespace VidU.data
             MusicPath = ThisElement.Element(nameof(MusicPath))?.Value;
             MusicAllignSec = double.Parse(ThisElement.Element(nameof(MusicAllignSec))?.Value??"0");
             BPM = double.Parse(ThisElement.Element(nameof(BPM))?.Value??"60");
-            BeatsPerBar = int.Parse(ThisElement.Element(nameof(BeatsPerBar))?.Value??"4");
             Clips = XmlConverter.ElementToMediaClipList(ThisElement.Element(nameof(Clips)));
             base.LoadFromXElement(ThisElement);
         }

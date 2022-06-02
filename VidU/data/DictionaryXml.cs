@@ -26,6 +26,7 @@ namespace VidU.data
         internal override void LoadFromXElement(XElement xElement)
         {
             ThisElement = xElement.Element(nameof(DictionaryXml));
+            if (ThisElement == null) return;
             IsValueInteger = bool.Parse(ThisElement.Element(nameof(IsValueInteger))?.Value??"false");
             Dict = ElementToDict(ThisElement);
             base.LoadFromXElement(ThisElement);

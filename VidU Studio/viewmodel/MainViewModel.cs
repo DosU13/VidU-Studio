@@ -1,51 +1,80 @@
 ﻿using MuzU;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VidU;
+using VidU.data;
 using VidU_Studio.model;
+using VidU_Studio.util;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
 
 namespace VidU_Studio.viewmodel
 {
-    internal class MainViewModel: BindableBase
+    internal class MainViewModel : BindableBase
     {
-        public VidUProject _project;
-        public VidUProject Project
+        private readonly VidUData data;
+        private MusicViewModel musicVM;
+        private IMainPage IMainPage;
+        public MainViewModel(VidUData vidUData, MusicViewModel musicViewModel, IMainPage mainPage)
         {
-            get => _project;
-            set
-            {
-                SetProperty(ref _project, value);
-                Task.Run(async () => LoadMuzUProject(await StorageFile.GetFileFromPathAsync(value.data.MuzUPath)));
-                CompositionModel = new CompositionModel(_project.data.Clips);
-                CompositionModel.mediaPlayerElement = mediaPlayerElement;
-                Task.Run(async () => CompositionModel.BackMusic = await StorageFile.GetFileFromPathAsync(value.data.MusicPath));
-                Storyboard.CompositionModel = CompositionModel;
-                Bindings.Update();
-            }
+            data = vidUData;
+            musicVM = musicViewModel;
+            IMainPage = mainPage;
+            BPM = data.BPM;
+            MuzUPath = data.MuzUPath;
+            Task.Run(async () => LoadMuzUProject(await StorageFile.GetFileFromPathAsync(data.MuzUPath)));
         }
 
-        private IStorageFile projectFile = null;
-        private bool existProject => Project != null;
-        private bool existProjectFile => projectFile != null;
-        public MuzUProject MuzU;
-        private CompositionModel _compositionModel;
-        private CompositionModel CompositionModel
+        private string muzUPath;
+        internal string MuzUPath { get => muzUPath; set { SetProperty(ref muzUPath, value);
+                        data.MuzUPath = value;}}
+
+        private MuzUProject muzUProject;
+        internal MuzUProject MuzUProject { get => muzUProject; set{
+                muzUProject = value;
+            } }
+
+        private double bPM;
+        public double BPM { get => bPM; set {
+                SetProperty(ref bPM, value);
+                data.BPM = value;
+                SecondsBeatConverter.BPM = value;
+                IMainPage.BPMChanged();
+            }}
+
+        internal async Task<bool> OpenMuzUFilePicker()
         {
-            get => _compositionModel; set
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            picker.FileTypeFilter.Add(".muzu");
+            try
             {
-                _compositionModel = value; _compositionModel.PropertyChanged += _compositionModel_PropertyChanged; ;
+                StorageFile file = await picker.PickSingleFileAsync();
+                if(file == null) return false;
+                if (await LoadMuzUProject(file))
+                {
+                    MuzUPath = file.Path;
+                    BPM = MuzUProject.BPM;
+                    musicVM.SetMusicData(MuzUProject.data.MusicPath, MuzUProject.data.MusicAllign_μs / 1000000.0);
+                }
+                StorageApplicationPermissions.FutureAccessList.Add(file);
             }
+            catch (Exception) { }
+            return false;
         }
 
-        private void _compositionModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async Task<bool> LoadMuzUProject(IStorageFile file)
         {
-            if (GroupMediaView.GroupClipVM != CompositionModel.SelectedGroupClip)
-                GroupMediaView.GroupClipVM = CompositionModel.SelectedGroupClip;
-            Bindings.Update();
+            if (file == null) return false;
+            using (var stream = await file.OpenAsync(FileAccessMode.Read))
+            {
+                MuzUProject = new MuzUProject(stream.AsStream());
+                return true;
+            }
         }
     }
 }

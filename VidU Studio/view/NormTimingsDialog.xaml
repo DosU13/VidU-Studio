@@ -1,5 +1,5 @@
 ﻿<ContentDialog
-    x:Class="VidU_Studio.view.AddGroupDialog"
+    x:Class="VidU_Studio.view.NormTimingsDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:VidU_Studio.view"
@@ -28,44 +28,17 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="250"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <TextBlock Text="Duration"/>
-        <TextBox Grid.Column="1" x:Name="DurationTxtBox"
-                 InputScope="Number"
-                 Text="10"/>
-
-        <ToggleButton Visibility="Collapsed" Grid.Row="1" Grid.Column="0" Margin="5"
-                      Content="From MuzU" 
+        <ToggleButton Grid.Row="0" Grid.ColumnSpan="2" Margin="5" 
+                      Content="From MuzU" HorizontalAlignment="Center"
                       IsChecked="{x:Bind IsMuzUOn, Mode=TwoWay}"/>
 
-        <ToggleButton Grid.Row="1" Grid.Column="1" Margin="5"
-                      IsChecked="{x:Bind IsAutoLocate, Mode=TwoWay}"
-                      Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"
-                      Content="Auto locate by Parameter"/>
-
-        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Margin="5" FontSize="11"
-                   TextAlignment="Center"
-                   Text="{x:Bind Info, Mode=OneWay}"
-                   Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"
-                   TextWrapping="WrapWholeWords"/>
-
-        <TextBlock Grid.Row="2" Text="Default duration" Margin="5"
-                   Visibility="{x:Bind VisibilityIfMuzUOff, Mode=OneWay}"/>
-        <TextBox Grid.Row="2" Grid.Column="1" Margin="5"
-                 InputScope="Number"
-                 Visibility="{x:Bind VisibilityIfMuzUOff, Mode=OneWay}"
-                 Text="{x:Bind DefaultDuration, Mode=TwoWay}"/>
-
-        <ListView Grid.Row="3" Margin="5"
+        <ListView Grid.Row="1" Margin="5"
                   Header="Sequences"
                   Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"
                   ItemsSource="{x:Bind MuzUProject.data.TimingSequences, Mode=OneWay}"
@@ -74,7 +47,7 @@
                   SelectionChanged="ListView_SelectionChanged"
                   SelectedItem="{x:Bind SelectedSequence, Mode=TwoWay}"/>
 
-        <ListView Grid.Row="3" Grid.Column="1" Margin="5"
+        <ListView Grid.Row="1" Grid.Column="1" Margin="5"
                   Header="Parameters"
                   Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"
                   ItemsSource="{x:Bind SelectedSequence.TimingTemplate.Properties, Mode=OneWay}"

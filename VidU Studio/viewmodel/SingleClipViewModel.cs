@@ -7,88 +7,78 @@ using System.Text;
 using System.Threading.Tasks;
 using VidU.data;
 using VidU_Studio.util;
+using Windows.Media.Editing;
 using Windows.Storage;
+using Windows.UI;
 
 namespace VidU_Studio.viewmodel
 {
     public class SingleClipViewModel: ClipViewModel
     {
-        public SingleClip data;
-        BaseClip ClipViewModel.Data => data;
-
-        public SingleClipViewModel(SingleClip singleClip)
+        internal SingleClipViewModel(SingleClip singleClip, IStoryBoard storyBoard): 
+            base(singleClip, storyBoard)
         {
-            data = singleClip;
-            Task.Run(async () => File = await StorageFile.GetFileFromPathAsync(data.Media.Path));
+            Task.Run(async () => File = await StorageFile.GetFileFromPathAsync(singleClip.Media.Path));
+            if(singleClip.Media is Video)
+            {
+                volume = (singleClip.Media as Video).Volume;
+                trimStart = (singleClip.Media as Video).TrimFromStart;
+            }
         }
+        internal SingleClip Data_ => Data as SingleClip;
 
-        public StorageFile _file = null;
-        public StorageFile File { get => _file;
+        private StorageFile file = null;
+        internal StorageFile File { get => file;
             set {
                 if (value == null) return;
-                _file = value;
-                if (value.IsVideo()) { if (data.Media is Image) data.Media = new Video(); }
-                else if (data.Media is Video) data.Media = new Image();
-                data.Media.Path = value.Path;
-                RaisePropertyChanged(nameof(File)); }}
+                SetProperty(ref file, value);
+                if (value.IsVideo()) { if (Data_.Media is Image) Data_.Media = new Video(); { Volume = volume; trimStart = 0; } }
+                else if (Data_.Media is Video) Data_.Media = new Image();
+                Data_.Media.Path = value.Path;
+                StoryBoard.UpdateComposition();
+            }}
 
-        public StorageFile Thumbnail => File;
+        internal override StorageFile Thumbnail => file;
 
-        public bool IsImage => data.Media is Image;
+        public bool IsImage => Data_.Media is Image;
 
-        public double Duration
-        {
-            get => data.StartPos;
-            set {
-                data.StartPos = value;
-                RaisePropertyChanged(nameof(Duration)); 
-            }
-        }
-
+        private int volume;
         public int Volume
         {
-            get
-            {
-                if (data.Media is Image) return 0;
-                else return (data.Media as Video).Volume;
-            }
+            get => volume;
             set
             {
-                if (data.Media is Image) return;
-                else
-                {
-                    if ((data.Media as Video).Volume == value) return;
-                    (data.Media as Video).Volume = value; 
-                    RaisePropertyChanged(nameof(Volume));
-                }
+                SetProperty(ref volume, value);
+                if (Data_.Media is Video) (Data_.Media as Video).Volume = value;
+                StoryBoard.UpdateComposition();
             }
         }
 
+        private double trimStart;
         public double TrimStart
         {
-            get
-            {
-                if (data.Media is Image) return 0;
-                else return (data.Media as Video).TrimFromStart;
-            }
+            get => trimStart;
             set
             {
-                if (data.Media is Image) return;
-                else
-                {
-                    (data.Media as Video).TrimFromStart = value;
-                    RaisePropertyChanged(nameof(TrimStart));
-                }
+                SetProperty(ref trimStart, value);
+                if (Data_.Media is Video) (Data_.Media as Video).TrimFromStart = value;
+                StoryBoard.UpdateComposition();
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void RaisePropertyChanged(string name)
+        internal override async Task<List<MediaClip>> CreateMediaClipsAsync()
         {
-            if (PropertyChanged != null)
+            if (File == null) return new List<MediaClip> { MediaClip.CreateFromColor(Color.FromArgb(255, 0, 0, 0), TimeSpan.FromSeconds(Duration)) };
+            MediaClip mediaClip;
+            if (IsImage) mediaClip = await MediaClip.CreateFromImageFileAsync(File, TimeSpan.FromSeconds(Data_.Duration));
+            else
             {
-                PropertyChanged(this, new PropertyChangedEventArgs(name));
+                mediaClip = await MediaClip.CreateFromFileAsync(File);
+                mediaClip.TrimTimeFromStart = TimeSpan.FromSeconds(TrimStart);
+                mediaClip.TrimTimeFromEnd = mediaClip.OriginalDuration - mediaClip.TrimTimeFromStart - TimeSpan.FromSeconds(Duration);
+                mediaClip.Volume = 2 * (Volume / 100.0);
             }
+            return new List<MediaClip> { mediaClip };
         }
     }
 }

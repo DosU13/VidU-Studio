@@ -27,6 +27,9 @@ using VidU_Studio.view;
 using VidU_Studio.util;
 using VidU_Studio.viewmodel;
 using VidU.data;
+using Windows.Media.Transcoding;
+using Windows.UI.Core;
+using Windows.UI.Popups;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -35,45 +38,40 @@ namespace VidU_Studio
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page, TimingCreator
+    public sealed partial class MainPage : Page, ITimingCreator, IMainPage
     {
+        private readonly ProjectRepoViewModel ProjectRepoVM; 
+        private CompositionModel CompositionModel;
         public MainPage()
         {
             this.InitializeComponent();
-
-            _ = LoadLocalSettingsAsync();
             SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += OnWindowClose;
+            CompositionModel = new CompositionModel() { MediaPlayerElement = mediaPlayerElement };
+            ProjectRepoVM = new ProjectRepoViewModel(this);
+            Storyboard.TimingCreator = this;
         }
 
-        public VidUProject _project;
-        public VidUProject Project
+        private MusicViewModel MusicVM;
+        private MainViewModel MainVM;
+        private StoryBoardViewModel StoryBoardVM;
+        void IMainPage.ProjectChanged(VidUProject newProject)
         {
-            get => _project;
-            set
-            {
-                _project = value;
-                Task.Run(async () => LoadMuzUProject(await StorageFile.GetFileFromPathAsync(value.data.MuzUPath)));
-                CompositionModel = new CompositionModel(_project.data.Clips);
-                CompositionModel.mediaPlayerElement = mediaPlayerElement;
-                Task.Run(async () => CompositionModel.BackMusic = await StorageFile.GetFileFromPathAsync(value.data.MusicPath));
-                Storyboard.CompositionModel = CompositionModel;
-                Bindings.Update();
-            }
+            MusicVM = new MusicViewModel(newProject.data, CompositionModel);
+            MainVM = new MainViewModel(newProject.data, MusicVM, this);
+            StoryBoardVM = new StoryBoardViewModel(newProject.data.Clips, CompositionModel, GroupMediaView);
+            Storyboard.StoryBoardVM = StoryBoardVM;
+            Bindings.Update();
         }
 
-        private IStorageFile projectFile = null;
-        private bool existProject => Project != null;
-        private bool existProjectFile => projectFile != null;
-        public MuzUProject MuzU;
-        private CompositionModel _compositionModel;
-        private CompositionModel CompositionModel { get => _compositionModel; set {
-                _compositionModel = value; _compositionModel.PropertyChanged += _compositionModel_PropertyChanged; ;
-            } }
+        void IMainPage.BPMChanged()
+        {
+            foreach (var c in CompositionModel.Clips) c.UpdateTime();
+        }
 
         private void _compositionModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (GroupMediaView.GroupClipVM != CompositionModel.SelectedGroupClip)
-                GroupMediaView.GroupClipVM = CompositionModel.SelectedGroupClip;
+            if (GroupMediaView.GroupClipVM != StoryBoardVM.SelectedGroupClip)
+                GroupMediaView.GroupClipVM = StoryBoardVM.SelectedGroupClip;
             Bindings.Update();
         }
 
@@ -85,52 +83,49 @@ namespace VidU_Studio
             await MusicMuzUContentDialog.ShowAsync();
         }
 
-        private async void SelectMuzU_Click(object sender, RoutedEventArgs e)
-        {
-            await OpenMuzUFilePicker();
-        }
-
-        private async void SelectMusic_Click(object sender, RoutedEventArgs e)
-        {
-            await OpenMusicFilePicker();
-        }
-
-        private async void BPM_Click(object sender, RoutedEventArgs e)
-        {
-            dialog = BPMContentDialog;
-            await BPMContentDialog.ShowAsync();
-        }
-
         private async void FinishVideo_Click(object sender, RoutedEventArgs e)
         {
+            dialog = FinishYourVideoDialog;
+            if(await FinishYourVideoDialog.ShowAsync() == ContentDialogResult.Primary)
+            {
+                var saveOperation = await CompositionModel.RenderVideo(VideoQualityComboBox.SelectedIndex, FastEncodingCheckBox.IsChecked.Value);
+                if (saveOperation == null) return;
+                dialog = RenderProgressDialog;
+                RenderProgressBar.Value = 0;
+                _ = RenderProgressDialog.ShowAsync();
+                saveOperation.Progress = new AsyncOperationProgressHandler<TranscodeFailureReason, double>(async (info, progress) =>
+                {
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
+                    {
+                        RenderProgressBar.Value = progress;
+                    }));
+                });
+                saveOperation.Completed = new AsyncOperationWithProgressCompletedHandler<TranscodeFailureReason, double>(async (info, status) =>
+                {
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(async () =>
+                    {
+                        dialog.Hide();
+                        try
+                        {
+                            var results = info.GetResults();
+                            if (results != TranscodeFailureReason.None || status != AsyncStatus.Completed)
+                            {
+                                await (new MessageDialog("Saving was unsuccessful ❗❗❗")).ShowAsync();
+                            }
+                            else
+                            {
+                                await (new MessageDialog("Your video successfully renderred ♥♥♥")).ShowAsync();
+                            }
+                        }
+                        catch (Exception) { }
+                    }));
+                });
+            }
         }
 
-        private async void NewEmpty_Click(object sender, RoutedEventArgs e)
+        async Task<bool> IMainPage.SaveWorkDialog()
         {
-            if (existProject) if (!(await SaveWorkDialog())) return;
-            Project = new VidUProject();
-            projectFile = null;
-        }
-
-        private async void Open_Click(object sender, RoutedEventArgs e)
-        {
-            if (existProject) if (!(await SaveWorkDialog())) return;
-            await LoadWithFilePicker();
-        }
-
-        private async void Save_Click(object sender, RoutedEventArgs e)
-        {
-            if (projectFile != null) await SaveToFile(projectFile);
-            else await SaveWithFilePicker();
-        }
-
-        private async void SaveAs_Click(object sender, RoutedEventArgs e)
-        {
-            await SaveWithFilePicker();
-        }
-
-        private async Task<bool> SaveWorkDialog()
-        {
+            if (!ProjectRepoVM.ExistProject) return true;
             if(dialog != null) dialog.Hide();
             dialog = new ContentDialog();
             dialog.Title = "Save your work?";
@@ -142,166 +137,52 @@ namespace VidU_Studio
             var result = await dialog.ShowAsync();
             if (result == ContentDialogResult.Primary)
             {
-                if (projectFile != null) return await SaveToFile(projectFile);
-                else return await SaveWithFilePicker();
+                await ProjectRepoVM.Save();
+                return true;
             }
             else if (result == ContentDialogResult.Secondary) return true;
             else if (result == ContentDialogResult.None) return false;
             return false;
         }
 
-        private async Task<bool> SaveWithFilePicker()
+        async Task ITimingCreator.AddGroupDialog()
         {
-            var picker = new Windows.Storage.Pickers.FileSavePicker();
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
-            picker.FileTypeChoices.Add("VidU file", new List<string>() { ".vidu" });
-            picker.SuggestedFileName = nameof(Project); // project name
-            try
-            {
-                StorageFile file = await picker.PickSaveFileAsync();
-                if (file != null)
-                {
-                    return await SaveToFile(file);
-                }
-            }
-            catch (Exception ex)
-            { Debug.WriteLine(ex); }
-            return false;
-        }
-
-        private async Task<bool> SaveToFile(IStorageFile file)
-        {
-            using (var stream = await file.OpenStreamForWriteAsync())
-            {
-                Project.Save(stream);
-                stream.Close();
-                if (projectFile == null) projectFile = file;
-                return true;
-            }
-        }
-
-        private async Task<bool> LoadWithFilePicker()
-        {
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
-            picker.FileTypeFilter.Add(".vidu");
-            try
-            {
-                StorageFile file = await picker.PickSingleFileAsync();
-                return await LoadFromFile(file);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("HERE: -->>" + ex.ToString());
-            }
-            return false;
-        }
-
-        private async Task<bool> OpenMuzUFilePicker()
-        {
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
-            picker.FileTypeFilter.Add(".muzu");
-            try
-            {
-                StorageFile file = await picker.PickSingleFileAsync();
-                if(await LoadMuzUProject(file))
-                {
-                    Project.data.MuzUPath = file.Path;
-                    Project.data.MusicPath = MuzU.data.MusicPath;
-                    Project.data.MusicAllignSec = MuzU.data.MusicAllign_μs / 1000000.0;
-                    Project.data.BPM = MuzU.BPM;
-                    Project.data.BeatsPerBar = MuzU.BeatsPerBar;
-                }
-                StorageApplicationPermissions.FutureAccessList.Add(file);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("HERE: -->>" + ex.ToString());
-            }
-            return false;
-        }
-
-        private async Task<bool> OpenMusicFilePicker()
-        {
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.MusicLibrary;
-            picker.FileTypeFilter.Add(".mp3");
-            picker.FileTypeFilter.Add(".wav");
-            try
-            {
-                StorageFile file = await picker.PickSingleFileAsync();
-                Project.data.MusicPath = file.Path;
-                CompositionModel.BackMusic = file;
-                StorageApplicationPermissions.FutureAccessList.Add(file);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("HERE: -->>" + ex.ToString());
-            }
-            return false;
-        }
-
-        private async Task<bool> LoadFromFile(IStorageFile file)
-        {
-            if (file == null) return false;   
-            using (var stream = await file.OpenAsync(FileAccessMode.Read))
-            {
-                Project = new VidUProject(stream.AsStream());
-                projectFile = file;
-                return true;
-            }
-        }
-
-        private async Task<bool> LoadMuzUProject(IStorageFile file)
-        {
-            if (file == null) return false;
-            using (var stream = await file.OpenAsync(FileAccessMode.Read))
-            {
-                MuzU = new MuzUProject(stream.AsStream());
-                Storyboard.TimingCreator = this;
-                Bindings.Update();
-                return true;
-            }
-            throw new NotImplementedException();
-        }
-
-        async Task TimingCreator.AddGroupDialog()
-        {
-            dialog = new AddGroupDialog(MuzU);
+            dialog = new AddGroupDialog(MainVM.MuzUProject, CompositionModel.Clips.Last().EndTime);
             if(await dialog.ShowAsync() == ContentDialogResult.Primary)
             {
-                CompositionModel.Clips.Add(new GroupClipViewModel((dialog as AddGroupDialog).Result));
+                StoryBoardVM.AddGroup((dialog as AddGroupDialog).Result);
             }
+        }
+
+        private async void EffectMuzU_Click(object sender, RoutedEventArgs e)
+        {
+            EffectViewModel effectVM = (EffectViewModel)((Button)sender).DataContext;
+            var res = await ((ITimingCreator)this).NormTimingsDialog(effectVM.ParentStartTime, effectVM.ParentEndTime);
+            if (!res.Key) return;
+            effectVM.ChangeMuzU(res.Value!=null, res.Value);
+        }
+
+        async Task<KeyValuePair<bool, DictionaryXml>> ITimingCreator.NormTimingsDialog(double startTime, double endTime)
+        {
+            dialog = new NormTimingsDialog(MainVM.MuzUProject, startTime, endTime);
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            {
+                return KeyValuePair.Create(true,(dialog as NormTimingsDialog).Result);
+            }
+            else return KeyValuePair.Create(false, (DictionaryXml)null);
         }
 
         private async void OnWindowClose(object sender, SystemNavigationCloseRequestedPreviewEventArgs args)
         {
             args.Handled = true;
-            if (existProject) if (!(await SaveWorkDialog())) return;
-            SaveLocalSettings();
+            await (this as IMainPage).SaveWorkDialog();
             App.Current.Exit();
         }
 
-        private void SaveLocalSettings()
+        private void AddEffect_Click(object sender, RoutedEventArgs e)
         {
-            if (projectFile == null) ApplicationData.Current.LocalSettings.Values["ProjectFileFutureAccessToken"] = null;
-            else
-            {
-                string faToken = StorageApplicationPermissions.FutureAccessList.Add(projectFile);
-                ApplicationData.Current.LocalSettings.Values["ProjectFileFutureAccessToken"] = faToken;
-            }
-        }
-
-        private async Task LoadLocalSettingsAsync()
-        {
-            if (ApplicationData.Current.LocalSettings.Values.ContainsKey("ProjectFileFutureAccessToken"))
-            {
-                string faToken = ApplicationData.Current.LocalSettings.Values["ProjectFileFutureAccessToken"].ToString();
-                IStorageFile _projectFile = await StorageApplicationPermissions.FutureAccessList.GetFileAsync(faToken);
-                await LoadFromFile(_projectFile);
-            }
+            if(AddEffectComboBox.SelectedIndex!=-1)
+                StoryBoardVM.SelectedClip.AddEffect((string)AddEffectComboBox.SelectedItem);
         }
     }
 }

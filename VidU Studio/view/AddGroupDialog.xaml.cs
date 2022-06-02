@@ -26,16 +26,18 @@ namespace VidU_Studio.view
     {
         private MuzUProject MuzUProject;
 
-        public AddGroupDialog(MuzUProject muzUProject)
+        public AddGroupDialog(MuzUProject muzUProject, double startTime)
         {
             MuzUProject = muzUProject;
+            StartPos = startTime;
             this.InitializeComponent();
         }
 
         private bool IsPrimaryBtnEnabled => (!isMuzUOn || SelectedPropertyIndex != -1);
 
         private double StartPos { get; set; } = 0;
-        private double EndPos { get; set; } = 10;
+        private double Duration => SecondsBeatConverter.ConvertBack(DurationTxtBox.Text);
+        private double EndPos => StartPos + Duration;
         private TimingSequence selectedSequence;
         private TimingSequence SelectedSequence { get=>selectedSequence; 
             set { selectedSequence = value;} }
@@ -83,14 +85,14 @@ namespace VidU_Studio.view
                     var v = dict.Dict.Select(x => x.Value).ToList();
                     v.Sort();
                     List<double> values = v.Distinct().ToList();
+                    clip.IsValueInteger = dict.IsValueInteger;
                     dict.Dict = dict.Dict.Select(x => KeyValuePair.Create(x.Key, (double)values.IndexOf(x.Value))).ToList();
                     clip.Values = values;
-                    clip.IsValueInteger = dict.IsValueInteger;
                     clip.TimingsWithIndices = dict;
                     Result = clip;
                 }
                 else Result = new SequencerClip() { TimingsWithValues = dict };
-                Result.StartPos = StartPos;
+                Result.Duration = Duration;
             }
         }
 

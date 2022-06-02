@@ -9,59 +9,45 @@ using System.Text;
 using System.Threading.Tasks;
 using VidU.data;
 using VidU_Studio.util;
+using Windows.Media.Editing;
 using Windows.Storage;
+using Windows.UI;
 
 namespace VidU_Studio.viewmodel
 {
     public class GroupClipViewModel : ClipViewModel
     {
-        public BaseClip data = null;
-        public BaseClip Data { get => data; set => data = value; }
-        public List<Media> DataMedias { get
+        internal GroupClipViewModel(BaseClip groupClip, IStoryBoard storyBoard): 
+            base(groupClip, storyBoard)
+        {
+            foreach (var m in DataMedias) Medias.Add(new MediaViewModel(m));
+            if (Data is SequencerClip)
+                if ((Data as SequencerClip).TimingsWithValues.IsValueInteger)
+                    Values = (Data as SequencerClip).TimingsWithValues.Dict.Select(it => 
+                        new StringViewModel(Convert.ToInt32(it.Value).ToString())).ToList();
+                else Values = (Data as SequencerClip).TimingsWithValues.Dict.Select(it => 
+                        new StringViewModel(it.Value.ToString())).ToList();
+            else if ((Data as AutoSequencerClip).IsValueInteger)
+                Values = (Data as AutoSequencerClip).Values.Select(it=>
+                    new StringViewModel(Convert.ToInt32(it).ToString())).ToList();
+            else Values = (Data as AutoSequencerClip).Values.Select(it=>
+                    new StringViewModel(it.ToString())).ToList();
+            OnPropertyChanged(nameof(Thumbnail));
+            Medias.CollectionChanged += Medias_CollectionChanged;
+        }
+
+        public List<Media> DataMedias
+        {
+            get
             {
                 if (Data is AutoSequencerClip) return (Data as AutoSequencerClip).Medias;
                 else if (Data is SequencerClip) return (Data as SequencerClip).Medias;
                 else return null;
-            } }
-
-        public GroupClipViewModel(BaseClip groupClip)
-        {
-            Data = groupClip;
-            var mediasIt = new ObservableCollection<MediaViewModel>();
-            foreach (var m in DataMedias) mediasIt.Add(new MediaViewModel(m));
-            medias = mediasIt;
-            if (Data is SequencerClip)
-                if ((Data as SequencerClip).TimingsWithValues.IsValueInteger)
-                    values = (Data as SequencerClip).TimingsWithValues.Dict.Select(it => 
-                        new StringViewModel(Convert.ToInt32(it.Value).ToString())).ToList();
-                else values = (Data as SequencerClip).TimingsWithValues.Dict.Select(it => 
-                    new StringViewModel(it.Value.ToString())).ToList();
-            else if ((Data as AutoSequencerClip).IsValueInteger)
-                values = (Data as AutoSequencerClip).Values.Select(it=>
-                    new StringViewModel(Convert.ToInt32(it).ToString())).ToList();
-            else values = (Data as AutoSequencerClip).Values.Select(it=>
-                    new StringViewModel(it.ToString())).ToList();
-            RaisePropertyChanged(nameof(Values));
-            medias.CollectionChanged += Medias_CollectionChanged;
+            }
         }
 
-        //internal GroupClipViewModel(List<StorageFile> storageFiles)
-        //{
-        //    Data = new SequencerClip();
-        //    medias = new ObservableCollection<MediaViewModel>();
-        //    foreach(var f in storageFiles) medias.Add(new MediaViewModel(f));
-        //    foreach(var m in medias) DataMedias.Add(m.data);
-        //    medias.CollectionChanged += Medias_CollectionChanged;
-        //}
-
-        private List<StringViewModel> values = null;
-        internal List<StringViewModel> Values => values;
-        private ObservableCollection<MediaViewModel> medias;
-        internal ObservableCollection<MediaViewModel> Medias { get => medias; set
-            {
-                medias = value;
-                RaisePropertyChanged(nameof(Medias));
-            } }
+        internal List<StringViewModel> Values;
+        internal ObservableCollection<MediaViewModel> Medias = new ObservableCollection<MediaViewModel>();
 
         private void Medias_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -78,6 +64,8 @@ namespace VidU_Studio.viewmodel
                     Debug.WriteLine("LibraryVM collection change not fully implemented");
                     break;
             }
+            OnPropertyChanged(nameof(Thumbnail));
+            StoryBoard.UpdateComposition();
         }
 
         public void AddFiles(IReadOnlyList<StorageFile> files)
@@ -89,29 +77,47 @@ namespace VidU_Studio.viewmodel
             }
         }
 
-        public StorageFile Thumbnail { get {
+        internal override StorageFile Thumbnail { get {
                 if(Medias==null) return null;
                 if(Medias.Count==0) return null;
                 return Medias[0].File;
             }}
 
-        public double Duration
+        internal override async Task<List<MediaClip>> CreateMediaClipsAsync()
         {
-            get => Data.StartPos;
-            set
+            if(Data is AutoSequencerClip)
             {
-                Data.StartPos = value;
-                RaisePropertyChanged(nameof(Duration));
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void RaisePropertyChanged(string name)
-        {
-            if (PropertyChanged != null)
+                var auto = Data as AutoSequencerClip;
+                var result = new List<MediaClip>();
+                MediaViewModel media; double dur;
+                for(int i = 0; i<auto.TimingsWithIndices.Dict.Count-1;i++)
+                {
+                    media = Medias[(int)auto.TimingsWithIndices.Dict[i].Value];
+                    dur = auto.TimingsWithIndices.Dict[i+1].Key - auto.TimingsWithIndices.Dict[i].Key;
+                    result.Add(await media.CreateMediaClip(dur));
+                }
+                media = Medias[(int)auto.TimingsWithIndices.Dict.Last().Value];
+                dur = EndTime - auto.TimingsWithIndices.Dict.Last().Key;
+                result.Add(await media.CreateMediaClip(dur));
+                return result;
+            }else if(Data is SequencerClip)
             {
-                PropertyChanged(this, new PropertyChangedEventArgs(name));
+                var seq = Data as SequencerClip;
+                var result = new List<MediaClip>();
+                MediaViewModel media; double dur;
+                for (int i = 0; i < seq.TimingsWithValues.Dict.Count - 1; i++)
+                {
+                    media = Medias[i];
+                    dur = seq.TimingsWithValues.Dict[i + 1].Key - seq.TimingsWithValues.Dict[i].Key;
+                    result.Add(await media.CreateMediaClip(dur));
+                }
+                media = Medias[seq.TimingsWithValues.Dict.Count-1];
+                dur = EndTime - seq.TimingsWithValues.Dict.Last().Key;
+                result.Add(await media.CreateMediaClip(dur));
+                return result;
             }
+            return new List<MediaClip>{MediaClip
+                .CreateFromColor(Color.FromArgb(255,0,0,0), TimeSpan.FromSeconds(Duration)) };
         }
     }
 }

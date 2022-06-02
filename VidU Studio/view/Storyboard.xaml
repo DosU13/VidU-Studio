@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:VidU_Studio.view"
+    xmlns:util="using:VidU_Studio.util"
     xmlns:vm="using:VidU_Studio.viewmodel"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,6 +12,8 @@
     d:DesignWidth="1200">
 
     <UserControl.Resources>
+        <util:SecondsBeatConverter x:Key="SecondsBeatConverter"/>
+
         <Style TargetType="GridViewItem" x:Key="ItemNoMarginStyle">
             <Setter Property="Margin" Value="0"/>
         </Style>
@@ -59,46 +62,47 @@
                 </AppBarButton>
                 <AppBarButton Icon="Add" Label="Group"
                               Click="AddGroup_Click"/>
-                <AppBarSeparator Visibility="{x:Bind CompositionModel.VisibilityIfSelected, Mode=OneWay}"/>
+                <AppBarSeparator Visibility="{x:Bind StoryBoardVM.VisibilityIfSelected, Mode=OneWay}"/>
                 <AppBarButton Icon="Refresh" Label="Replace"
-                              Visibility="{x:Bind CompositionModel.VisibilityIfSingle, Mode=OneWay}"
+                              Visibility="{x:Bind StoryBoardVM.VisibilityIfSingle, Mode=OneWay}"
                               Click="Replace_Click"/>
                 <AppBarButton x:Name="DurationBarBtn" 
-                              Icon="Clock" 
-                              Visibility="{x:Bind CompositionModel.VisibilityIfSelected, Mode=OneWay}"
+                              Icon="Clock" IsEnabled="False"
+                              Visibility="{x:Bind StoryBoardVM.VisibilityIfSelected, Mode=OneWay}"
                               Label="Duration"
                               AllowFocusOnInteraction ="True">
                     <AppBarButton.Flyout>
                         <Flyout Placement="Top">
-                            <TextBox Text="{x:Bind CompositionModel.SelectedSingleClip.Duration, Mode=TwoWay}"
+                            <TextBox Text="{x:Bind StoryBoardVM.SelectedSingleClip.Duration, Mode=TwoWay, 
+                                                   Converter={StaticResource SecondsBeatConverter}}" 
                                      InputScope="Number"/>
                         </Flyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarButton x:Name="VolumeBarBtn" 
                               Icon="Volume" 
-                              Visibility="{x:Bind CompositionModel.VisibilityIfVideo, Mode=OneWay}">
+                              Visibility="{x:Bind StoryBoardVM.VisibilityIfVideo, Mode=OneWay}">
                     <AppBarButton.Flyout>
                         <Flyout Placement="Top">
-                            <Slider Value="{x:Bind CompositionModel.SelectedSingleClip.Volume, Mode=TwoWay}"/>
+                            <Slider Value="{x:Bind StoryBoardVM.SelectedSingleClip.Volume, Mode=TwoWay}"/>
                         </Flyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarButton x:Name="TrimBarBtn"
                               Icon="Trim" Label="Trim Start"
-                              Visibility="{x:Bind CompositionModel.VisibilityIfVideo, Mode=OneWay}"
+                              Visibility="{x:Bind StoryBoardVM.VisibilityIfVideo, Mode=OneWay}"
                               AllowFocusOnInteraction ="True">
                     <AppBarButton.Flyout>
                         <Flyout Placement="Top">
-                            <TextBox Text="{x:Bind CompositionModel.SelectedSingleClip.TrimStart, Mode=TwoWay}" 
+                            <TextBox Text="{x:Bind StoryBoardVM.SelectedSingleClip.TrimStart, Mode=TwoWay}" 
                                      InputScope="Number"/>
                         </Flyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarSeparator Visibility="{x:Bind CompositionModel.VisibilityIfSelected, Mode=OneWay}"/>
+                <AppBarSeparator Visibility="{x:Bind StoryBoardVM.VisibilityIfSelected, Mode=OneWay}"/>
                 <AppBarButton x:Name="DeleteBarBtn" 
                               Icon="Delete" 
-                              Visibility="{x:Bind CompositionModel.VisibilityIfSelected, Mode=OneWay}"
+                              Visibility="{x:Bind StoryBoardVM.VisibilityIfSelected, Mode=OneWay}"
                               Click="Delete_Click"/>
             </CommandBar.PrimaryCommands>
         </CommandBar>
@@ -110,7 +114,7 @@
                   ScrollViewer.VerticalScrollBarVisibility="Hidden"
                   SelectionChanged="TimelineGrid_SelectionChanged"
                   ItemsPanel="{StaticResource HorizontalItemsPanelTemplate}"
-                  ItemsSource="{x:Bind CompositionModel.Clips, Mode=OneWay}"
+                  ItemsSource="{x:Bind StoryBoardVM.Clips, Mode=OneWay}"
                   ItemTemplate="{StaticResource ClipItemTemplate}">
         </GridView>
     </Grid>

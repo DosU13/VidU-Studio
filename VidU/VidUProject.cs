@@ -12,7 +12,7 @@ namespace VidU
 {
     public class VidUProject
     {
-        public VidUData _data;
+        private VidUData _data;
         public VidUData data
         {
             get { return _data; }

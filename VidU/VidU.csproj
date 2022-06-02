@@ -121,6 +121,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="data\DictionaryXml.cs" />
+    <Compile Include="data\Effect.cs" />
     <Compile Include="data\Media.cs" />
     <Compile Include="data\VidUData.cs" />
     <Compile Include="data\BaseClip.cs" />

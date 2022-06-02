@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VidU.data;
 using VidU_Studio.util;
+using Windows.Media.Editing;
 using Windows.Storage;
 
 namespace VidU_Studio.viewmodel
@@ -17,40 +18,71 @@ namespace VidU_Studio.viewmodel
         {
             data = media;
             Task.Run(async () => File = await StorageFile.GetFileFromPathAsync(data.Path));
-            if (IsImage) _trimStart = 0;
-            else _trimStart = (data as Video).TrimFromStart;
+            if (!IsImage)
+            {
+                trimStart = (data as Video).TrimFromStart;
+                volume = (data as Video).Volume;
+            }
         }
 
         public MediaViewModel(StorageFile storageFile)
         {
-            if (storageFile.IsVideo()) data = new Video();
+            if (storageFile.IsVideo())
+            {
+                data = new Video();
+                trimStart = (data as Video).TrimFromStart;
+                volume = (data as Video).Volume;
+            }
             else data = new Image();
             data.Path = storageFile.Path;
-            _trimStart = 0;
-            _file = storageFile;
+            file = storageFile;
         }
 
-        private StorageFile _file = null;
+        private StorageFile file = null;
         public StorageFile File
         {
-            get => _file;
+            get => file;
             set
             {
-                SetProperty(ref _file, value);
+                SetProperty(ref file, value);
                 data.Path = value.Path;
             }
         }
 
         public bool IsImage => data is Image;
 
-        private double _trimStart;
-
+        private double trimStart = 0;
         public double TrimStart
         {
-            get => _trimStart;
+            get => trimStart;
             set {
-                SetProperty(ref _trimStart, value);
+                SetProperty(ref trimStart, value);
                 if (!IsImage) (data as Video).TrimFromStart = value;
+            }
+        }
+
+        private int volume = 50;
+        public int Volume
+        {
+            get => volume;
+            set
+            {
+                SetProperty(ref volume, value);
+                if (!IsImage) (data as Video).Volume = value;
+            }
+        }
+
+        internal async Task<MediaClip> CreateMediaClip(double duration)
+        {
+            if (IsImage) return await MediaClip.CreateFromImageFileAsync(File, TimeSpan.FromSeconds(duration));
+            else
+            {
+                var mediaClip = await MediaClip.CreateFromFileAsync(File);
+                mediaClip.TrimTimeFromStart = TimeSpan.FromSeconds(TrimStart);
+                mediaClip.TrimTimeFromEnd = mediaClip.OriginalDuration 
+                    - mediaClip.TrimTimeFromStart - TimeSpan.FromSeconds(duration);
+                mediaClip.Volume = 2 * (Volume / 100.0);
+                return mediaClip;
             }
         }
     }

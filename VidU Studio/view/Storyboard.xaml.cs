@@ -37,23 +37,23 @@ namespace VidU_Studio.view
             this.InitializeComponent();
         }
 
-        public CompositionModel _compositionModel;
-        public CompositionModel CompositionModel
+        public StoryBoardViewModel storyBoardVM;
+        public StoryBoardViewModel StoryBoardVM
         {
-            get => _compositionModel;
+            get => storyBoardVM;
             set
             {
-                _compositionModel = value;
+                storyBoardVM = value;
                 Bindings.Update();
             }
         }
-        internal TimingCreator TimingCreator;
+        internal ITimingCreator TimingCreator;
 
         private async void AddSingle_Click(object sender, RoutedEventArgs e)
         {
             var file = await PickFile();
             if (file == null) return;
-            CompositionModel.AddSingle(file);
+            StoryBoardVM.AddSingle(file, SecondsBeatConverter.ConvertBack(SingleClipDurTxtBox.Text));
             Bindings.Update();
         }
 
@@ -61,7 +61,7 @@ namespace VidU_Studio.view
         {
             var file = await PickFile();
             if (file == null) return;
-            CompositionModel.SelectedSingleClip.File = file;
+            StoryBoardVM.SelectedSingleClip.File = file;
             Bindings.Update();
         }
 
@@ -104,13 +104,15 @@ namespace VidU_Studio.view
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            CompositionModel.Clips.RemoveAt(TimelineGrid.SelectedIndex);
+            StoryBoardVM.Clips.RemoveAt(TimelineGrid.SelectedIndex);
         }
 
         private void TimelineGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            CompositionModel.SelectedClip = TimelineGrid.SelectedItem as ClipViewModel;
+            StoryBoardVM.SelectedClip = TimelineGrid.SelectedItem as ClipViewModel;
             Bindings.Update();
         }
+
+        internal void BindingsUpdate() => Bindings.Update();
     }
 }

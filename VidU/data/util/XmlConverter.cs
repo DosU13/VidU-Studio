@@ -22,6 +22,7 @@ namespace VidU.data
 
         public static List<T> ElementToList<T>(XElement xElement) where T : XmlBase, new()
         {
+            if (xElement == null) return new List<T>();
             XElement element = xElement.Element("list");
             int count = int.Parse(element.Attribute("count").Value);
             List<T> list = new List<T>(count);

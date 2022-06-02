@@ -12,17 +12,20 @@ namespace VidU.data
         public BaseClip(){}
         public BaseClip(XElement xElement) : base(xElement) { }
         
-        public double StartPos { get; set; } = 1;
+        public double Duration { get; set; } = 1;
+        public List<Effect> Effects { get; set; } = new List<Effect>();
 
         internal override XElement ToXElement()
         {
-            ThisElement.Add(new XElement(nameof(StartPos), StartPos));
+            ThisElement.Add(new XElement(nameof(Duration), Duration),
+                            new XElement(nameof(Effects), XmlConverter.ListToElement<Effect>(Effects)));
             return base.ToXElement();
         }
 
         internal override void LoadFromXElement(XElement xElement)
         {
-            StartPos = double.Parse(ThisElement.Element(nameof(StartPos))?.Value??"0");
+            Duration = double.Parse(ThisElement.Element(nameof(Duration))?.Value??"0");
+            Effects = XmlConverter.ElementToList<Effect>(ThisElement.Element(nameof(Effects)));
             base.LoadFromXElement(ThisElement);
         }
 

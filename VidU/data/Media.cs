@@ -58,7 +58,7 @@ namespace VidU.data
         public Video(XElement xElement) : base(xElement) { }
 
         public double TrimFromStart { get; set; } = 0;
-        public int Volume { get; set; } = 100;
+        public int Volume { get; set; } = 50;
 
         internal override XElement ToXElement()
         {
