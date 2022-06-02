@@ -230,10 +230,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\VidUVideoEffects\VidUVideoEffects.csproj">
-      <Project>{64c1515f-68f2-4a5b-87f2-735e8849e75b}</Project>
-      <Name>VidUVideoEffects</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\MuzU Studio\MuzU\MuzU.csproj">
       <Project>{D53EC5C1-F4BC-49D4-A442-BBFD44C61BED}</Project>
       <Name>MuzU</Name>
