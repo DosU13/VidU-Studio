@@ -19,13 +19,11 @@ namespace VidUVideoEffects
 
         public Property(string name, IPropertySet configuration)
         {
-            Debug.WriteLine("♥♥♥ " + configuration.Select(it => "[" + it.Key + ":" + it.Value + "]\r").Aggregate(string.Empty, (s, v) => s + v));
             IsMuzU = (bool)configuration[nameof(IsMuzU)];
             if(!IsMuzU) Value = (double)configuration[name+"_"+nameof(Value)];
             else
             {
                 Values = (Dictionary<float, float>)configuration[nameof(Values)];
-                Debug.WriteLine("♥♥♥ " + Values.Select(it => "[" + it.Key + ":" + it.Value + "]\r").Aggregate(string.Empty, (s, v) => s + v));
                 TransitionType = (string)configuration[name + "_" + nameof(TransitionType)];
                 MinValue = (double)configuration[name + "_" + nameof(MinValue)];
                 MaxValue = (double)configuration[name + "_" + nameof(MaxValue)];

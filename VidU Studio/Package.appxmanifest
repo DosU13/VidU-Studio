@@ -10,8 +10,8 @@
 
   <Identity
     Name="436f3a16-8fba-4f43-a54d-25b259071e57"
-    Publisher="CN=dosla"
-    Version="1.0.0.0" />
+    Publisher="CN=DosU"
+    Version="1.0.1.0" />
 
   <mp:PhoneIdentity PhoneProductId="436f3a16-8fba-4f43-a54d-25b259071e57" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -39,7 +39,7 @@
         Square44x44Logo="Assets\Square44x44Logo.png"
         Description="VidU Studio"
         BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
     </Application>

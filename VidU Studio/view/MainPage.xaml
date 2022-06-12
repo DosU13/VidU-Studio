@@ -215,7 +215,7 @@
                            Text="{x:Bind MusicVM.MusicPath, Mode=OneWay}" 
                            VerticalAlignment="Center"/>
                 <TextBlock Grid.Row="2" Grid.Column="0" Margin="5"
-                           Text="MusicAllign(sec)" 
+                           Text="Music Offset (sec)" 
                            VerticalAlignment="Center"/>
                 <TextBox Grid.Row="2" Grid.Column="1" Margin="5"
                          Text="{x:Bind MusicVM.MusicAllignSec, Mode=TwoWay}" 
