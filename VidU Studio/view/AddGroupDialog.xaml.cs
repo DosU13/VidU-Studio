@@ -42,7 +42,8 @@ namespace VidU_Studio.view
         private TimingSequence SelectedSequence { get=>selectedSequence; 
             set { selectedSequence = value;} }
         private int selectedPropertyIndex = -1;
-        private int SelectedPropertyIndex { get=> selectedPropertyIndex; set { selectedPropertyIndex = value; Bindings.Update(); }}
+        private int SelectedPropertyIndex { get=> selectedPropertyIndex; 
+                            set { selectedPropertyIndex = value; Bindings.Update(); }}
 
         private bool isMuzUOn = true;
         private bool IsMuzUOn { get => isMuzUOn; set { isMuzUOn = value; Bindings.Update(); } }
@@ -69,26 +70,52 @@ namespace VidU_Studio.view
                 else return "";
             } }
 
+        private TimingSequence _lastSelectedSequence = null;
+        private bool _lastIsAutoLocate = false;
+        private List<string> _properties;
+        private List<string> Properties { get {
+                if (SelectedSequence == _lastSelectedSequence && IsAutoLocate == _lastIsAutoLocate) return _properties;
+                _lastSelectedSequence = SelectedSequence;
+                _lastIsAutoLocate = IsAutoLocate;
+                if (SelectedSequence == null) _properties = null;
+                else if (SelectedSequence.Lyrics == null || IsAutoLocate) _properties = 
+                        SelectedSequence.TimingTemplate.Properties.Select(it=>it.Name).ToList();
+                else {
+                    _properties = new List<string>(SelectedSequence.
+                        TimingTemplate.Properties.Select(it => it.Name));
+                    _properties.Add("Lyrics");
+                }
+                return _properties;
+            } }
+
         public BaseClip Result;
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
             if (IsMuzUOn)
             {
-                var dict = new DictionaryXml()
+                StringDictionaryXml dict;
+                if (SelectedPropertyIndex >= SelectedSequence.TimingTemplate.Properties.Count)
                 {
-                    Dict = MuzUExtractor.Extract(SelectedSequence, SelectedPropertyIndex, StartPos, EndPos),
-                    IsValueInteger = SelectedSequence.TimingTemplate.Properties[SelectedPropertyIndex].Type == MuzU.data.ValueType.Integer
-                };
+                    dict = new StringDictionaryXml()
+                    { Dict = MuzUExtractor.ExtractSyllables(SelectedSequence, StartPos, EndPos) };
+                }
+                else
+                {
+                    var n = new NumberDictionaryXml()
+                    {
+                        Dict = MuzUExtractor.Extract(SelectedSequence, SelectedPropertyIndex, StartPos, EndPos),
+                        IsValueInteger = SelectedSequence.TimingTemplate.Properties[SelectedPropertyIndex].Type == MuzU.data.ValueType.Integer
+                    };
+                    dict = StringDictionaryXml.NumbToStrDictXml(n);
+                }
                 if (IsAutoLocate)
                 {
                     AutoSequencerClip clip = new AutoSequencerClip();
-                    var v = dict.Dict.Select(x => x.Value).ToList();
-                    v.Sort();
-                    List<double> values = v.Distinct().ToList();
-                    clip.IsValueInteger = dict.IsValueInteger;
-                    dict.Dict = dict.Dict.Select(x => KeyValuePair.Create(x.Key, (double)values.IndexOf(x.Value))).ToList();
+                    var values = dict.Dict.Select(x => x.Value).Distinct().ToList();
+                    values.Sort();
                     clip.Values = values;
-                    clip.TimingsWithIndices = dict;
+                    clip.TimingsWithIndices = new NumberDictionaryXml()
+                    { Dict = dict.Dict.Select(x => KeyValuePair.Create(x.Key, (double)values.IndexOf(x.Value))).ToList() };
                     Result = clip;
                 }
                 else Result = new SequencerClip() { TimingsWithValues = dict };

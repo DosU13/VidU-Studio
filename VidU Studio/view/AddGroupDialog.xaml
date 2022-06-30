@@ -75,10 +75,9 @@
                   SelectedItem="{x:Bind SelectedSequence, Mode=TwoWay}"/>
 
         <ListView Grid.Row="3" Grid.Column="1" Margin="5"
-                  Header="Parameters"
+                  Header="Properties"
                   Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"
-                  ItemsSource="{x:Bind SelectedSequence.TimingTemplate.Properties, Mode=OneWay}"
-                  ItemTemplate="{StaticResource TimingPropertyItemTemplate}"
+                  ItemsSource="{x:Bind Properties, Mode=OneWay}"
                   SelectionMode="Single"
                   SelectedIndex="{x:Bind SelectedPropertyIndex, Mode=TwoWay}"/>
     </Grid>

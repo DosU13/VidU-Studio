@@ -39,7 +39,9 @@ namespace VidUVideoEffects
             else
             {
                 float lastTime = new List<float>(Values.Keys).FindLast(it => it <= time);
-                double v = Values[lastTime];
+                double v;
+                if (lastTime == 0 || lastTime == -1) v = 0;
+                else v = Values[lastTime];
                 double tv = 0;
                 if (time - lastTime < trnTime) tv = trnValue * (trnTime - time + lastTime) / trnTime;
                 switch (TransitionType)
@@ -51,6 +53,7 @@ namespace VidUVideoEffects
                 }
                 if (v < 0) v = 0;
                 if (v > 1) v = 1;
+                Debug.WriteLine(v);
                 return Convert.ToSingle(v * (MaxValue - MinValue) + MinValue);
             }
         }

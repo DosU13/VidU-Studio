@@ -11,6 +11,6 @@ namespace VidU_Studio.util
     internal interface ITimingCreator
     {
         Task AddGroupDialog();
-        Task<KeyValuePair<bool, DictionaryXml>> NormTimingsDialog(double startTime, double endTime);
+        Task<KeyValuePair<bool, NumberDictionaryXml>> NormTimingsDialog(double startTime, double endTime);
     }
 }

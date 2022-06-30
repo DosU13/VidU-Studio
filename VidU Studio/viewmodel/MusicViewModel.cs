@@ -27,7 +27,8 @@ namespace VidU_Studio.viewmodel
             SetProperty(ref musicAllignSec, MusicAllignSec, nameof(MusicAllignSec));
             data.MusicAllignSec = MusicAllignSec;
             if (MusicPath == null || MusicPath == "") File = null;
-            else File = await StorageFile.GetFileFromPathAsync(MusicPath);
+            else try{ File = await StorageFile.GetFileFromPathAsync(MusicPath);
+                    }catch(Exception) { File = null; };
         }
 
         internal string MusicPath { get {

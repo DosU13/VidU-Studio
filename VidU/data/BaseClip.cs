@@ -67,7 +67,7 @@ namespace VidU.data
         public SequencerClip(XElement xElement) : base(xElement) { }
 
         public List<Media> Medias { get; set; } = new List<Media>();
-        public DictionaryXml TimingsWithValues = new DictionaryXml();  
+        public StringDictionaryXml TimingsWithValues = new StringDictionaryXml();  
 
         internal override XElement ToXElement()
         {
@@ -81,7 +81,7 @@ namespace VidU.data
         {
             ThisElement = xElement.Element(nameof(SequencerClip));
             Medias = XmlConverter.ElementToMediaList(ThisElement.Element(nameof(Medias)));
-            TimingsWithValues = new DictionaryXml(ThisElement);
+            TimingsWithValues = new StringDictionaryXml(ThisElement);
             base.LoadFromXElement(ThisElement);
         }
     }
@@ -92,16 +92,14 @@ namespace VidU.data
         public AutoSequencerClip(XElement xElement) : base(xElement) { }
 
         public List<Media> Medias { get; set; } = new List<Media>();
-        public List<double> Values = new List<double>();
-        public bool IsValueInteger = false;
-        public DictionaryXml TimingsWithIndices = new DictionaryXml();
+        public List<string> Values = new List<string>();
+        public NumberDictionaryXml TimingsWithIndices = new NumberDictionaryXml();
 
         internal override XElement ToXElement()
         {
             ThisElement = new XElement(nameof(AutoSequencerClip),
                 new XElement(nameof(Medias), XmlConverter.ListToElement(Medias)),
                 new XElement(nameof(Values), XmlConverter.ListToElement(Values)),
-                new XElement(nameof(IsValueInteger), IsValueInteger),
                 TimingsWithIndices.ToXElement());
             return base.ToXElement();
         }
@@ -110,9 +108,8 @@ namespace VidU.data
         {
             ThisElement = xElement.Element(nameof(AutoSequencerClip));
             Medias = XmlConverter.ElementToMediaList(ThisElement.Element(nameof(Medias)));
-            Values = XmlConverter.ElementToList(ThisElement.Element(nameof(Values)));
-            IsValueInteger = bool.Parse(ThisElement.Element(nameof(IsValueInteger))?.Value??"false");
-            TimingsWithIndices = new DictionaryXml(ThisElement);
+            Values = XmlConverter.ElementToStrList(ThisElement.Element(nameof(Values)));
+            TimingsWithIndices = new NumberDictionaryXml(ThisElement);
             base.LoadFromXElement(ThisElement);
         }
     }

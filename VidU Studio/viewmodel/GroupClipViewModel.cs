@@ -4,14 +4,19 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VidU.data;
 using VidU_Studio.util;
+using Windows.Foundation.Collections;
 using Windows.Media.Editing;
+using Windows.Media.Effects;
 using Windows.Storage;
 using Windows.UI;
+using Windows.UI.Popups;
+using Windows.UI.Xaml.Controls;
 
 namespace VidU_Studio.viewmodel
 {
@@ -20,20 +25,24 @@ namespace VidU_Studio.viewmodel
         internal GroupClipViewModel(BaseClip groupClip, IStoryBoard storyBoard): 
             base(groupClip, storyBoard)
         {
-            foreach (var m in DataMedias) Medias.Add(new MediaViewModel(m));
             if (Data is SequencerClip)
-                if ((Data as SequencerClip).TimingsWithValues.IsValueInteger)
-                    Values = (Data as SequencerClip).TimingsWithValues.Dict.Select(it => 
-                        new StringViewModel(Convert.ToInt32(it.Value).ToString())).ToList();
-                else Values = (Data as SequencerClip).TimingsWithValues.Dict.Select(it => 
-                        new StringViewModel(it.Value.ToString())).ToList();
-            else if ((Data as AutoSequencerClip).IsValueInteger)
-                Values = (Data as AutoSequencerClip).Values.Select(it=>
-                    new StringViewModel(Convert.ToInt32(it).ToString())).ToList();
+               Values = (Data as SequencerClip).TimingsWithValues.Dict.Select(it => 
+                        new StringViewModel(it.Value)).ToList();
             else Values = (Data as AutoSequencerClip).Values.Select(it=>
-                    new StringViewModel(it.ToString())).ToList();
+                    new StringViewModel(it)).ToList();
+            InitMedias();
+        }
+
+        private bool MediasReady = false;
+        private async void InitMedias()
+        {
+            foreach (var m in DataMedias)
+            {
+                Medias.Add(await MediaViewModel.Create(m));
+            }
             OnPropertyChanged(nameof(Thumbnail));
             Medias.CollectionChanged += Medias_CollectionChanged;
+            MediasReady = true;
         }
 
         public List<Media> DataMedias
@@ -65,6 +74,50 @@ namespace VidU_Studio.viewmodel
                     break;
             }
             OnPropertyChanged(nameof(Thumbnail));
+            if (!CompositionFreeze) StoryBoard.UpdateComposition();
+            Debug.WriteLine("GroupClipViewModel Col Changed");
+        }
+
+        private bool CompositionFreeze = false;
+        internal async void AddFilesByName(List<StorageFile> files)
+        {
+            List<string> notFound = new List<string>();
+            var values = Values.Select(it => it.Str).ToList();
+            CompositionFreeze = true;
+            while (Medias.Count < Values.Count) Medias.Add(new MediaViewModel());
+            int wordLen = 0;
+            for(int i=0; i<values.Count(); i++)
+            {
+                wordLen++;
+                if (values[i].Contains('_')||i==values.Count-1)
+                {
+                    var word = values.GetRange(i+1 - wordLen, wordLen).Aggregate((a,b)=>a+b);
+                    word = word.Replace("_", "").ToLower();
+                    var f = files.Find(it => Path.GetFileNameWithoutExtension(it.DisplayName)
+                                        .ToLower() == word);
+                    if (f != null)
+                    {
+                        for (int j = 0; j < wordLen; j++)
+                        {
+                            Medias.RemoveAt(i + 1 - wordLen+j);
+                            Medias.Insert(i + 1 - wordLen+j, new MediaViewModel(f));
+                        }
+                    }else notFound.Add(word);
+                    wordLen = 0;
+                }
+            }
+            if (notFound.Count != 0) {
+                ContentDialog dialog = new ContentDialog();
+                dialog.Title = notFound.Count + " words not found: ";
+                TextBlock txt = new TextBlock();
+                txt.Text = String.Join("; ", notFound.Distinct());
+                txt.IsTextSelectionEnabled = true;
+                txt.TextWrapping = Windows.UI.Xaml.TextWrapping.WrapWholeWords;
+                dialog.Content = txt;
+                dialog.CloseButtonText = "OK";
+                await dialog.ShowAsync();
+            }
+            CompositionFreeze = false;
             StoryBoard.UpdateComposition();
         }
 
@@ -85,6 +138,7 @@ namespace VidU_Studio.viewmodel
 
         internal override async Task<List<MediaClip>> CreateMediaClipsAsync()
         {
+            if (!MediasReady) return null;
             if(Data is AutoSequencerClip)
             {
                 var auto = Data as AutoSequencerClip;
@@ -114,10 +168,29 @@ namespace VidU_Studio.viewmodel
                 media = Medias[seq.TimingsWithValues.Dict.Count-1];
                 dur = EndTime - seq.TimingsWithValues.Dict.Last().Key;
                 result.Add(await media.CreateMediaClip(dur));
+                if (IsLyrics) UpdateRotationEffect(result);
                 return result;
             }
             return new List<MediaClip>{MediaClip
                 .CreateFromColor(Color.FromArgb(255,0,0,0), TimeSpan.FromSeconds(Duration)) };
+        }
+
+        public bool IsLyrics { get { return !double.TryParse
+                    (Values.Find(it => it.Str != "").Str, out double _); } }
+
+        private void UpdateRotationEffect(List<MediaClip> result)
+        {
+            int side = 1;
+            for(int i = 1; i<Values.Count; i++)
+            {
+                if (!Values[i - 1].Str.Contains('_'))
+                {
+                    var lyrRot = new VideoEffectDefinition("VidUVideoEffects.LyricsRotation",
+                        new PropertySet { { "side", side } });
+                    result[i].VideoEffectDefinitions.Add(lyrRot);
+                    side *= -1;
+                }
+            }
         }
     }
 }

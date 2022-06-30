@@ -71,7 +71,7 @@ namespace VidU_Studio.viewmodel
             return new VideoEffectDefinition("VidUVideoEffects." + Data.Name, propSet);
         }
 
-        internal void ChangeMuzU(bool isMuzU, DictionaryXml value)
+        internal void ChangeMuzU(bool isMuzU, NumberDictionaryXml value)
         {
             Data.TimingsWithValues = value;
             IsMuzU = isMuzU;
@@ -114,7 +114,6 @@ namespace VidU_Studio.viewmodel
         internal double Value { get => _value; set{
                 SetProperty(ref _value, value);
                 Data.Value = value;
-                StoryBoard.UpdateComposition();
             }}
 
         private double minValue;
@@ -124,7 +123,6 @@ namespace VidU_Studio.viewmodel
             {
                 SetProperty(ref minValue, value);
                 Data.MinValue = value;
-                StoryBoard.UpdateComposition();
             }
         }
 
@@ -135,9 +133,9 @@ namespace VidU_Studio.viewmodel
             {
                 SetProperty(ref maxValue, value);
                 Data.MaxValue = value;
-                StoryBoard.UpdateComposition();
             }
         }
+        internal void UpdateComposition() => StoryBoard.UpdateComposition();
 
         internal Visibility VisibilityIfMuzUOn { get { if(IsMuzU) return Visibility.Visible; return Visibility.Collapsed; } }
         internal Visibility VisibilityIfMuzUOff { get { if(IsMuzU) return Visibility.Collapsed; return Visibility.Visible; } }

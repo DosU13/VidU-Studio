@@ -120,7 +120,8 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="data\DictionaryXml.cs" />
+    <Compile Include="data\StringDictionaryXml.cs" />
+    <Compile Include="data\NumberDictionaryXml.cs" />
     <Compile Include="data\Effect.cs" />
     <Compile Include="data\Media.cs" />
     <Compile Include="data\VidUData.cs" />

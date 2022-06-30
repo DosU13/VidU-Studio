@@ -49,6 +49,7 @@ namespace VidU_Studio
             CompositionModel = new CompositionModel() { MediaPlayerElement = mediaPlayerElement };
             ProjectRepoVM = new ProjectRepoViewModel(this);
             Storyboard.TimingCreator = this;
+            _EffectsView.TimingCreator = this;
         }
 
         private MusicViewModel MusicVM;
@@ -56,10 +57,12 @@ namespace VidU_Studio
         private StoryBoardViewModel StoryBoardVM;
         void IMainPage.ProjectChanged(VidUProject newProject)
         {
+            CompositionModel.Stop();
             MusicVM = new MusicViewModel(newProject.data, CompositionModel);
             MainVM = new MainViewModel(newProject.data, MusicVM, this);
-            StoryBoardVM = new StoryBoardViewModel(newProject.data.Clips, CompositionModel, GroupMediaView);
+            StoryBoardVM = new StoryBoardViewModel(newProject.data.Clips, CompositionModel, GroupMediaView, _EffectsView);
             Storyboard.StoryBoardVM = StoryBoardVM;
+            _EffectsView.StoryBoardVM = StoryBoardVM;
             Bindings.Update();
         }
 
@@ -147,42 +150,30 @@ namespace VidU_Studio
 
         async Task ITimingCreator.AddGroupDialog()
         {
-            dialog = new AddGroupDialog(MainVM.MuzUProject, CompositionModel.Clips.Last().EndTime);
+            double strTime;
+            if (CompositionModel.Clips.Count == 0) strTime = 0.0;
+            else strTime = CompositionModel.Clips.Last().EndTime;
+            dialog = new AddGroupDialog(MainVM.MuzUProject, strTime);
             if(await dialog.ShowAsync() == ContentDialogResult.Primary)
             {
                 StoryBoardVM.AddGroup((dialog as AddGroupDialog).Result);
             }
         }
 
-        private async void EffectMuzU_Click(object sender, RoutedEventArgs e)
-        {
-            EffectViewModel effectVM = (EffectViewModel)((Button)sender).DataContext;
-            var res = await ((ITimingCreator)this).NormTimingsDialog(effectVM.ParentStartTime, effectVM.ParentEndTime);
-            if (!res.Key) return;
-            effectVM.ChangeMuzU(res.Value!=null, res.Value);
-        }
-
-        async Task<KeyValuePair<bool, DictionaryXml>> ITimingCreator.NormTimingsDialog(double startTime, double endTime)
+        async Task<KeyValuePair<bool, NumberDictionaryXml>> ITimingCreator.NormTimingsDialog(double startTime, double endTime)
         {
             dialog = new NormTimingsDialog(MainVM.MuzUProject, startTime, endTime);
             if (await dialog.ShowAsync() == ContentDialogResult.Primary)
             {
                 return KeyValuePair.Create(true,(dialog as NormTimingsDialog).Result);
             }
-            else return KeyValuePair.Create(false, (DictionaryXml)null);
+            else return KeyValuePair.Create(false, (NumberDictionaryXml)null);
         }
 
         private async void OnWindowClose(object sender, SystemNavigationCloseRequestedPreviewEventArgs args)
         {
             args.Handled = true;
-            await (this as IMainPage).SaveWorkDialog();
-            App.Current.Exit();
-        }
-
-        private void AddEffect_Click(object sender, RoutedEventArgs e)
-        {
-            if(AddEffectComboBox.SelectedIndex!=-1)
-                StoryBoardVM.SelectedClip.AddEffect((string)AddEffectComboBox.SelectedItem);
+            if(await (this as IMainPage).SaveWorkDialog()) App.Current.Exit();
         }
     }
 }

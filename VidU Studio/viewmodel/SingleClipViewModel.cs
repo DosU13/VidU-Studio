@@ -68,16 +68,20 @@ namespace VidU_Studio.viewmodel
 
         internal override async Task<List<MediaClip>> CreateMediaClipsAsync()
         {
-            if (File == null) return new List<MediaClip> { MediaClip.CreateFromColor(Color.FromArgb(255, 0, 0, 0), TimeSpan.FromSeconds(Duration)) };
             MediaClip mediaClip;
-            if (IsImage) mediaClip = await MediaClip.CreateFromImageFileAsync(File, TimeSpan.FromSeconds(Data_.Duration));
-            else
+            try
             {
-                mediaClip = await MediaClip.CreateFromFileAsync(File);
-                mediaClip.TrimTimeFromStart = TimeSpan.FromSeconds(TrimStart);
-                mediaClip.TrimTimeFromEnd = mediaClip.OriginalDuration - mediaClip.TrimTimeFromStart - TimeSpan.FromSeconds(Duration);
-                mediaClip.Volume = 2 * (Volume / 100.0);
-            }
+                if (File == null) mediaClip = MediaClip.CreateFromColor(Color.FromArgb(255, 0, 0, 0), TimeSpan.FromSeconds(Duration));
+                else if (IsImage) mediaClip = await MediaClip.CreateFromImageFileAsync(File, TimeSpan.FromSeconds(Data_.Duration));
+                else
+                {
+                    mediaClip = await MediaClip.CreateFromFileAsync(File);
+                    mediaClip.TrimTimeFromStart = TimeSpan.FromSeconds(TrimStart);
+                    mediaClip.TrimTimeFromEnd = mediaClip.OriginalDuration - mediaClip.TrimTimeFromStart - TimeSpan.FromSeconds(Duration);
+                    mediaClip.Volume = 2 * (Volume / 100.0);
+                }
+            }catch (Exception) { mediaClip = MediaClip.CreateFromColor(
+                Color.FromArgb(255, 0, 0, 0), TimeSpan.FromSeconds(Duration));}
             return new List<MediaClip> { mediaClip };
         }
     }

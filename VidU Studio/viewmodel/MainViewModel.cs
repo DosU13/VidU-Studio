@@ -26,12 +26,15 @@ namespace VidU_Studio.viewmodel
             IMainPage = mainPage;
             BPM = data.BPM;
             MuzUPath = data.MuzUPath;
-            Task.Run(async () => LoadMuzUProject(await StorageFile.GetFileFromPathAsync(data.MuzUPath)));
+            Task.Run(async () => {
+                try { await LoadMuzUProject(await StorageFile.GetFileFromPathAsync(data.MuzUPath)); }
+                catch (Exception) { MuzUPath = ""; }});
         }
 
         private string muzUPath;
-        internal string MuzUPath { get => muzUPath; set { SetProperty(ref muzUPath, value);
-                        data.MuzUPath = value;}}
+        internal string MuzUPath { get => muzUPath; 
+                                   set { SetProperty(ref muzUPath, value);
+                                         data.MuzUPath = value;}}
 
         private MuzUProject muzUProject;
         internal MuzUProject MuzUProject { get => muzUProject; set{
@@ -69,7 +72,7 @@ namespace VidU_Studio.viewmodel
 
         private async Task<bool> LoadMuzUProject(IStorageFile file)
         {
-            if (file == null) return false;
+            if (file == null) { return false; }
             using (var stream = await file.OpenAsync(FileAccessMode.Read))
             {
                 MuzUProject = new MuzUProject(stream.AsStream());

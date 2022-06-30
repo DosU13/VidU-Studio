@@ -8,62 +8,38 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using System.Numerics;
 using System.Diagnostics;
-using Windows.UI;
 
 namespace VidUVideoEffects
 {
-    public sealed class Transform2D : IBasicVideoEffect
+    public sealed class LyricsRotation: IBasicVideoEffect
     {
+        private int side;
+
         public void ProcessFrame(ProcessVideoFrameContext context)
         {
             using (CanvasBitmap inputBitmap = CanvasBitmap.CreateFromDirect3D11Surface(_canvasDevice, context.InputFrame.Direct3DSurface))
             using (CanvasRenderTarget renderTarget = CanvasRenderTarget.CreateFromDirect3D11Surface(_canvasDevice, context.OutputFrame.Direct3DSurface))
             using (CanvasDrawingSession ds = renderTarget.CreateDrawingSession())
             {
-                ds.Clear(Color.FromArgb(255,0,0,0));
-
-                TimeSpan time = context.InputFrame.RelativeTime.HasValue ? context.InputFrame.RelativeTime.Value : new TimeSpan();
-                if (time.TotalSeconds < Start || time.TotalSeconds > End)
+                var rot = new StraightenEffect()
                 {
-                    ds.DrawImage(inputBitmap);
-                    return;
-                }
-
-                // START HERE
-                double s = Scale.Get(time.TotalSeconds);
-                double w = inputBitmap.Size.Width;
-                double h = inputBitmap.Size.Height;
-                var trans = new Transform2DEffect();
-                trans.TransformMatrix = new Matrix3x2(
-                    (float)s, 0, 0, (float)s,
-                    (float)((1 - s + (s+1)*Horizontal.Get(time.TotalSeconds))*w/2),
-                    (float)((1 - s + (s+1)*Vertical.Get(time.TotalSeconds))*h/2));
-                trans.Source = inputBitmap;
-                ds.DrawImage(trans);
+                    Source = inputBitmap,
+                    MaintainSize = true,
+                    Angle = side * MathF.PI * 0.0625f
+                };
+                ds.DrawImage(rot);
             }
         }
 
-        private Property Scale;
-        private Property Horizontal;
-        private Property Vertical;
-
-        float Start;
-        float End;
         public void SetProperties(IPropertySet configuration)
         {
-            Start = Convert.ToSingle(configuration["Start"]);
-            End = Convert.ToSingle(configuration["End"]);
-            //START HERE
-            Scale = new Property(nameof(Scale), configuration);
-            Horizontal = new Property(nameof(Horizontal), configuration);
-            Vertical = new Property(nameof(Vertical), configuration);
+            side = Convert.ToInt32(configuration["side"]);
         }
 
         private CanvasDevice _canvasDevice;
 
         public void SetEncodingProperties(VideoEncodingProperties encodingProperties, IDirect3DDevice device)
         {
-            //_currentEncodingProperties = encodingProperties;
             _canvasDevice = CanvasDevice.CreateFromDirect3D11Device(device);
             CanvasDevice.DebugLevel = CanvasDebugLevel.Error;
         }

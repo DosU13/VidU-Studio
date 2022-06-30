@@ -147,6 +147,9 @@
     <Compile Include="viewmodel\SingleClipViewModel.cs" />
     <Compile Include="util\WindowTitle.cs" />
     <Compile Include="viewmodel\StringViewModel.cs" />
+    <Compile Include="view\EffectsView.xaml.cs">
+      <DependentUpon>EffectsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="view\NormTimingsDialog.xaml.cs">
       <DependentUpon>NormTimingsDialog.xaml</DependentUpon>
     </Compile>
@@ -237,6 +240,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="view\EffectsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="view\NormTimingsDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

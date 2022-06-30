@@ -26,11 +26,14 @@ namespace VidU_Studio.model
         private List<BaseClip> data;
         private CompositionModel CompModel;
         private GroupMediaView GroupMediaView;
-        internal StoryBoardViewModel(List<BaseClip> data, CompositionModel compositionModel, GroupMediaView groupMediaView)
+        private EffectsView EffectsView;
+        internal StoryBoardViewModel(List<BaseClip> data, CompositionModel compositionModel,
+            GroupMediaView groupMediaView, EffectsView effectsView)
         {
             this.data = data;
             CompModel = compositionModel;
             GroupMediaView = groupMediaView;
+            EffectsView = effectsView;
             Clips.Clear();
             CompModel.UpdateComposition();
             foreach (var cl in data)
@@ -92,9 +95,11 @@ namespace VidU_Studio.model
                 OnPropertyChanged(nameof(VisibilityIfVideo));
                 OnPropertyChanged(nameof(VisibilityIfGroup));
                 GroupMediaView.GroupClipVM = SelectedGroupClip;
+                EffectsView.Refresh();
             }
         }
         internal Visibility VisibilityIfSelected => VisibilityIf(SelectedClip != null);
+        internal Visibility VisibilityIfLast => VisibilityIf(SelectedClip == Clips.LastOrDefault());
         internal Visibility VisibilityIfSingle => VisibilityIf(SelectedClip is SingleClipViewModel);
         internal Visibility VisibilityIfGroup => VisibilityIf(SelectedClip is GroupClipViewModel);
         internal Visibility VisibilityIfVideo => VisibilityIf((SelectedClip is SingleClipViewModel)

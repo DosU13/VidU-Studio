@@ -14,7 +14,7 @@ namespace VidU.data
 
         public string Name { get; set; } = "EffectName";
         public bool IsMuzU { get; set; } = false;
-        public DictionaryXml TimingsWithValues = new DictionaryXml();
+        public NumberDictionaryXml TimingsWithValues = new NumberDictionaryXml();
         public List<EffectProperty> Properties { get; set; } = new List<EffectProperty>();
 
         internal override XElement ToXElement()
@@ -32,7 +32,7 @@ namespace VidU.data
             ThisElement = xElement.Element(nameof(Effect));
             Name = ThisElement.Element(nameof(Name)).Value;
             IsMuzU = bool.Parse(ThisElement.Element(nameof(IsMuzU))?.Value??"false");
-            TimingsWithValues = new DictionaryXml(ThisElement);
+            TimingsWithValues = new NumberDictionaryXml(ThisElement);
             Properties = XmlConverter.ElementToList<EffectProperty>(ThisElement.Element(nameof(Properties)));
             base.LoadFromXElement(ThisElement);
         }

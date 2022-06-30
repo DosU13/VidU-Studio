@@ -11,7 +11,7 @@
   <Identity
     Name="436f3a16-8fba-4f43-a54d-25b259071e57"
     Publisher="CN=DosU"
-    Version="1.0.1.0" />
+    Version="1.0.3.0" />
 
   <mp:PhoneIdentity PhoneProductId="436f3a16-8fba-4f43-a54d-25b259071e57" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

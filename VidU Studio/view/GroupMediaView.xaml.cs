@@ -65,6 +65,15 @@ namespace VidU_Studio.view
             Bindings.Update();
         }
 
+        private async void AddByName_Click(object sender, RoutedEventArgs e)
+        {
+            var files = await PickFiles();
+            if (files == null) return;
+            if (files.Count == 0) return;
+            GroupClipVM.AddFilesByName(files.ToList());
+            Bindings.Update();
+        }
+
         private async void Replace_Click(object sender, RoutedEventArgs e)
         {
             var file = await PickFile();

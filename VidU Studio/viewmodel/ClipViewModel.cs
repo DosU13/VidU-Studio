@@ -39,12 +39,12 @@ namespace VidU_Studio.viewmodel
                 case NotifyCollectionChangedAction.Add:
                     var newItem = e.NewItems[0] as EffectViewModel;
                     Data.Effects.Add(newItem.Data);
-                    //CompModel.UpdateComposition();
+                    StoryBoard.UpdateComposition();
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     var oldItem = e.OldItems[0] as EffectViewModel;
                     Data.Effects.Remove(oldItem.Data);
-                    //CompModel.UpdateComposition();
+                    StoryBoard.UpdateComposition();
                     break;
                 default:
                     Debug.WriteLine("Collection change not fully implemented");
@@ -60,6 +60,7 @@ namespace VidU_Studio.viewmodel
             {
                 SetProperty(ref duration, value);
                 Data.Duration = value;
+                StoryBoard.UpdateComposition();
             }
         }
 
@@ -98,6 +99,7 @@ namespace VidU_Studio.viewmodel
             try
             {
                 var clips = await CreateMediaClipsAsync();
+                if (clips == null) return null;
                 foreach (var e in CreateEffects())
                     foreach (var cl in clips)
                     {

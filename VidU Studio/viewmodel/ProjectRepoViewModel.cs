@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,6 +28,7 @@ namespace VidU_Studio.viewmodel
         private StorageFile projectFile;
         private StorageFile ProjectFile { get => projectFile; set { SetProperty(ref projectFile, value);
                 OnPropertyChanged(nameof(ExistProjectFile)); SaveLocalSettings(); } }
+
         public bool ExistProject { get => project != null; }
         public bool ExistProjectFile { get => projectFile != null; } // I didn't understand Binding quit well, save button doesn't enabling, it didn't get notification
 
@@ -95,6 +97,7 @@ namespace VidU_Studio.viewmodel
             if (!(await mainPage.SaveWorkDialog())) return;
             ProjectFile = null;
             Project = new VidUProject();
+            Debug.WriteLine("New Empty Pressed in ProjectRepoVM end");
         }
 
         private void SaveLocalSettings()

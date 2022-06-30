@@ -67,8 +67,8 @@
                               Visibility="{x:Bind StoryBoardVM.VisibilityIfSingle, Mode=OneWay}"
                               Click="Replace_Click"/>
                 <AppBarButton x:Name="DurationBarBtn" 
-                              Icon="Clock" IsEnabled="False"
-                              Visibility="{x:Bind StoryBoardVM.VisibilityIfSelected, Mode=OneWay}"
+                              Icon="Clock"
+                              Visibility="{x:Bind StoryBoardVM.VisibilityIfLast, Mode=OneWay}"
                               Label="Duration"
                               AllowFocusOnInteraction ="True">
                     <AppBarButton.Flyout>
@@ -102,7 +102,7 @@
                 <AppBarSeparator Visibility="{x:Bind StoryBoardVM.VisibilityIfSelected, Mode=OneWay}"/>
                 <AppBarButton x:Name="DeleteBarBtn" 
                               Icon="Delete" 
-                              Visibility="{x:Bind StoryBoardVM.VisibilityIfSelected, Mode=OneWay}"
+                              Visibility="{x:Bind StoryBoardVM.VisibilityIfLast, Mode=OneWay}"
                               Click="Delete_Click"/>
             </CommandBar.PrimaryCommands>
         </CommandBar>

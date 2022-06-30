@@ -24,9 +24,16 @@ namespace VidU_Studio.model
         Random random = new Random();
         internal void UpdateComposition()
         {
+            Debug.WriteLine(nameof(UpdateComposition));
             int id = random.Next(int.MinValue, int.MaxValue);
             currentTaskId = id;
             _ = UpdateCompositionAsync(id);
+        }
+
+        internal void Stop()
+        {
+            currentTaskId = -1;
+            Clips.Clear();
         }
 
         private int currentTaskId = 0;
@@ -39,11 +46,16 @@ namespace VidU_Studio.model
             foreach (var clip in Clips)
             {
                 var mediaClips = await clip.CreateMediaClipsWithEffectsAsync();
+                if (mediaClips == null) currentTaskId = -1;
                 if (id != currentTaskId) throw new OperationCanceledException();
-                foreach (var m in mediaClips) MediaComp.Clips.Add(m);
+                foreach (var m in mediaClips)
+                {
+                    if (m == null) { currentTaskId = -1; throw new OperationCanceledException(); }
+                    MediaComp.Clips.Add(m);
+                }
             }
             if (id != currentTaskId) throw new OperationCanceledException();
-           await UpdateMediaElementSource();
+           await UpdateMediaElementSource(id);
         }
 
         internal async void UpdateMusic(StorageFile musicFile, double musicAllignSec)
@@ -61,7 +73,7 @@ namespace VidU_Studio.model
         internal MediaPlayerElement MediaPlayerElement { private get; set; }
         public object Dispatcher { get; private set; }
 
-        public async Task UpdateMediaElementSource()
+        public async Task UpdateMediaElementSource(int id = 0)
         {
             if (MediaComp.Clips.Count == 0) MediaPlayerElement.Source = null;
             else
@@ -71,9 +83,12 @@ namespace VidU_Studio.model
                     {
                         try
                         {
-                            mediaStreamSource = MediaComp.GeneratePreviewMediaStreamSource(
-                                (int)MediaPlayerElement.ActualWidth, (int)MediaPlayerElement.ActualHeight);
-                            MediaPlayerElement.Source = MediaSource.CreateFromMediaStreamSource(mediaStreamSource);
+                            if (id == currentTaskId || id == 0)
+                            {
+                                mediaStreamSource = MediaComp.GeneratePreviewMediaStreamSource(
+                                    (int)MediaPlayerElement.ActualWidth, (int)MediaPlayerElement.ActualHeight);
+                                MediaPlayerElement.Source = MediaSource.CreateFromMediaStreamSource(mediaStreamSource);
+                            }
                         }catch(Exception) { };
                     });
             }

@@ -55,7 +55,31 @@ namespace VidU.data
             for (int i = 0; i < count; i++)
             {
                 XElement item = element.Element("item-" + i);
-                list.Insert(i, double.Parse(item.Value)); 
+                list.Insert(i, double.Parse(item.Value));
+            }
+            return list;
+        }
+
+        public static XElement ListToElement(List<string> list)
+        {
+            XElement element = new XElement("list", new XAttribute("count", list.Count));
+            for (int i = 0; i < list.Count; i++)
+            {
+                XElement xElement = new XElement("item-" + i, list[i]);
+                element.Add(xElement);
+            }
+            return element;
+        }
+
+        public static List<string> ElementToStrList(XElement xElement)
+        {
+            XElement element = xElement.Element("list");
+            int count = int.Parse(element.Attribute("count").Value);
+            List<string> list = new List<string>(count);
+            for (int i = 0; i < count; i++)
+            {
+                XElement item = element.Element("item-" + i);
+                list.Insert(i, item.Value);
             }
             return list;
         }

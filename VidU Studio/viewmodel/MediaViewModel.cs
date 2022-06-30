@@ -7,6 +7,7 @@ using VidU.data;
 using VidU_Studio.util;
 using Windows.Media.Editing;
 using Windows.Storage;
+using Windows.UI;
 
 namespace VidU_Studio.viewmodel
 {
@@ -14,10 +15,19 @@ namespace VidU_Studio.viewmodel
     {
         public Media data;
 
-        public MediaViewModel(Media media)
+        internal static async Task<MediaViewModel> Create(Media data)
+        {
+            if(data == null) return new MediaViewModel();
+            StorageFile f = null;
+            try { f = await StorageFile.GetFileFromPathAsync(data.Path); }catch (Exception) { }
+            return new MediaViewModel(data, f);
+        }
+
+        public MediaViewModel(Media media, StorageFile file = null)
         {
             data = media;
-            Task.Run(async () => File = await StorageFile.GetFileFromPathAsync(data.Path));
+            File = file;
+            if(file == null) Task.Run(async () => File = await StorageFile.GetFileFromPathAsync(data.Path));
             if (!IsImage)
             {
                 trimStart = (data as Video).TrimFromStart;
@@ -25,8 +35,9 @@ namespace VidU_Studio.viewmodel
             }
         }
 
-        public MediaViewModel(StorageFile storageFile)
+        public MediaViewModel(StorageFile storageFile = null)
         {
+            if (storageFile == null) return;
             if (storageFile.IsVideo())
             {
                 data = new Video();
@@ -45,7 +56,8 @@ namespace VidU_Studio.viewmodel
             set
             {
                 SetProperty(ref file, value);
-                data.Path = value.Path;
+                if (value != null) data.Path = value.Path;
+                else data.Path = null;
             }
         }
 
@@ -74,6 +86,8 @@ namespace VidU_Studio.viewmodel
 
         internal async Task<MediaClip> CreateMediaClip(double duration)
         {
+            if (File == null) return MediaClip.CreateFromColor(
+                Color.FromArgb(0,0,0,0), TimeSpan.FromSeconds(duration));
             if (IsImage) return await MediaClip.CreateFromImageFileAsync(File, TimeSpan.FromSeconds(duration));
             else
             {

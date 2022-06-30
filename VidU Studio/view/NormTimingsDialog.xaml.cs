@@ -52,17 +52,17 @@ namespace VidU_Studio.view
                 if(isMuzUOn) return Visibility.Visible;
                 else return Visibility.Collapsed; } }
 
-        public DictionaryXml Result = null;
+        public NumberDictionaryXml Result = null;
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
             if (IsMuzUOn){
                 var Dict = MuzUExtractor.Extract(SelectedSequence, SelectedPropertyIndex, StartPos, EndPos);
                 double minValue = Dict.Min(it => it.Value);
                 double maxValue = Dict.Max(it => it.Value);
-                if (minValue == maxValue) Result = new DictionaryXml()
+                if (minValue == maxValue) Result = new NumberDictionaryXml()
                     { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, 0.0)).ToList()};
-                else Result = new DictionaryXml()
-                    { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, (it.Value - minValue) / maxValue)).ToList() };
+                else Result = new NumberDictionaryXml()
+                    { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, (it.Value - minValue) / (maxValue - minValue))).ToList() };
             }else Result = null;
         }
 

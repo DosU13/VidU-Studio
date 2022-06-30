@@ -19,58 +19,6 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         </Style>
 
-        <DataTemplate x:Key="EffectsListItemTemplate" x:DataType="vm:EffectViewModel">
-            <Grid HorizontalAlignment="Stretch">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="{x:Bind Name}"/>
-                <Button Grid.Column="1" Content="MuzU" Margin="5,0" Click="EffectMuzU_Click"/>
-                <Button Grid.Column="2" Click="{x:Bind Remove}" Margin="5,0"><SymbolIcon Symbol="Delete"/></Button>
-                <ListView Grid.Row="1" Grid.ColumnSpan="3" SelectionMode="None"
-                          ItemsSource="{x:Bind Properties}"
-                          ItemTemplate="{StaticResource PropertyListItemTemplate}"
-                          ItemContainerStyle="{StaticResource ListViewFullWidth}"/>
-            </Grid>
-        </DataTemplate>
-
-        <DataTemplate x:Key="PropertyListItemTemplate" x:DataType="vm:EffectPropertyViewModel">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="{x:Bind Name}" Margin="5"/>
-                <controls:RangeSelector Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"  Margin="5"
-                                        Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}" 
-                                        Maximum="{x:Bind Maximum}" Minimum="{x:Bind Minimum}" 
-                                        RangeEnd="{x:Bind MaxValue, Mode=TwoWay}" 
-                                        RangeStart="{x:Bind MinValue, Mode=TwoWay}"
-                                        StepFrequency="0.001"/>
-                <Slider Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"  Margin="5"
-                        Visibility="{x:Bind VisibilityIfMuzUOff, Mode=OneWay}" StepFrequency="0.001"
-                        Minimum="{x:Bind Minimum}" Maximum="{x:Bind Maximum}"
-                        Value="{x:Bind Value, Mode=TwoWay}"/>
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="TransitionType" Margin="5"
-                           Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"/>
-                <ComboBox Grid.Row="1" Grid.Column="2"  Margin="5"
-                          Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"
-                          ItemsSource="{x:Bind model:EffectsModel.TransitionTypes}"
-                          SelectedItem="{x:Bind TransitionType, Mode=TwoWay}"/>
-            </Grid> 
-        </DataTemplate>
-        
         <Style x:Key="TransparentTextBox" TargetType="TextBox">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
@@ -151,37 +99,7 @@
                                 AreTransportControlsEnabled="True"/>
             <view:Storyboard Grid.Row="1" Grid.ColumnSpan="2" 
                              x:Name="Storyboard"/>
-            <Grid Grid.Column="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <ToggleButton Grid.Column="0" VerticalAlignment="Stretch" 
-                              Content="||" Visibility="Collapsed"/>
-                <Grid Grid.Column="1" Width="500" Visibility="Visible"
-                      VerticalAlignment="Top">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width=".7*"/>
-                        <ColumnDefinition Width=".3*"/>
-                    </Grid.ColumnDefinitions>
-                    <ComboBox x:Name="AddEffectComboBox" Margin="5" VerticalAlignment="Top" 
-                            ItemsSource="{x:Bind model:EffectsModel.EffectNames}" 
-                            SelectedIndex="0"/>
-                    <Button Grid.Column="1" Margin="5" VerticalAlignment="Top"
-                        Content="Add Effect" Click="AddEffect_Click"/>
-                    <ListView Grid.Row="1" Grid.ColumnSpan="2" SelectionMode="None"
-                              ScrollViewer.VerticalScrollBarVisibility="Auto"
-                              ScrollViewer.VerticalScrollMode="Auto"
-                              HorizontalAlignment="Stretch"
-                              ItemContainerStyle="{StaticResource ListViewFullWidth}"
-                              ItemsSource="{x:Bind StoryBoardVM.SelectedClip.EffectVMs, Mode=OneWay}"
-                              ItemTemplate="{StaticResource EffectsListItemTemplate}"/>
-                </Grid>
-            </Grid>
+            <view:EffectsView Grid.Column="1" x:Name="_EffectsView"/>
             <view:GroupMediaView Grid.Row="2" Grid.ColumnSpan="2" 
                                  x:Name="GroupMediaView" 
                                  Visibility="{x:Bind StoryBoardVM.VisibilityIfGroup, Mode=OneWay}"/>

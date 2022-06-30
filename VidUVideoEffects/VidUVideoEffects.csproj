@@ -121,6 +121,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="LyricsRotation.cs" />
     <Compile Include="Transform2D.cs" />
     <Compile Include="DirectionalBlur.cs" />
     <Compile Include="Vignette.cs" />

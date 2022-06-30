@@ -44,7 +44,7 @@ namespace VidU_Studio.view
             set
             {
                 storyBoardVM = value;
-                Bindings.Update();
+                try { Bindings.Update(); } catch (Exception) { };
             }
         }
         internal ITimingCreator TimingCreator;

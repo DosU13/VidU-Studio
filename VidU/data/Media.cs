@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,9 +29,9 @@ namespace VidU.data
 
         internal static Media Create(XElement xElement)
         {
-            bool tryImage = xElement.Element(nameof(Image)) != null;
-            if (tryImage) return new Image(xElement);
-            else return new Video(xElement);
+            if (xElement.Element(nameof(Image)) != null) return new Image(xElement);
+            if (xElement.Element(nameof(Video)) != null) return new Video(xElement);
+            return null;
         }
     }
 

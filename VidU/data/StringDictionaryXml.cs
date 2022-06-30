@@ -7,27 +7,24 @@ using System.Xml.Linq;
 
 namespace VidU.data
 {
-    public class DictionaryXml : XmlBase
+    public class StringDictionaryXml : XmlBase
     {
-        public DictionaryXml() { }
-        public DictionaryXml(XElement xElement) : base(xElement) { }
+        public StringDictionaryXml() { }
+        public StringDictionaryXml(XElement xElement) : base(xElement) { }
 
-        public bool IsValueInteger = false;
-        public List<KeyValuePair<double, double>> Dict { get; set; } = new List<KeyValuePair<double, double>>();
+        public List<KeyValuePair<double, string>> Dict { get; set; } = new List<KeyValuePair<double, string>>();
 
         internal override XElement ToXElement()
         {
-            ThisElement = new XElement(nameof(DictionaryXml),
-                            new XElement(nameof(IsValueInteger), IsValueInteger),
+            ThisElement = new XElement(nameof(StringDictionaryXml),
                             ListToElement(Dict));
             return base.ToXElement();
         }
 
         internal override void LoadFromXElement(XElement xElement)
         {
-            ThisElement = xElement.Element(nameof(DictionaryXml));
+            ThisElement = xElement.Element(nameof(StringDictionaryXml));
             if (ThisElement == null) return;
-            IsValueInteger = bool.Parse(ThisElement.Element(nameof(IsValueInteger))?.Value??"false");
             Dict = ElementToDict(ThisElement);
             base.LoadFromXElement(ThisElement);
         }
@@ -35,7 +32,7 @@ namespace VidU.data
         private static string KeyName = "TimeSec";
         private static string ValueName = "Value";
 
-        private static XElement ListToElement(List<KeyValuePair<double, double>> list)
+        private static XElement ListToElement(List<KeyValuePair<double, string>> list)
         {
             XElement element = new XElement("list", new XAttribute("count", list.Count));
             for (int i = 0; i < list.Count; i++)
@@ -48,18 +45,28 @@ namespace VidU.data
             return element;
         }
 
-        private static List<KeyValuePair<double, double>> ElementToDict(XElement xElement)
+        private static List<KeyValuePair<double, string>> ElementToDict(XElement xElement)
         {
             XElement element = xElement.Element("list");
             int count = int.Parse(element.Attribute("count").Value);
-            List<KeyValuePair<double, double>> list = new List<KeyValuePair<double, double>>(count);
+            List<KeyValuePair<double, string>> list = new List<KeyValuePair<double, string>>(count);
             for (int i = 0; i < count; i++)
             {
                 XElement item = element.Element("item-" + i);
                 list.Insert(i, KeyValuePair.Create(double.Parse(item.Element(KeyName).Value),
-                                                   double.Parse(item.Element(ValueName).Value)));
+                                                   item.Element(ValueName).Value));
             }
             return list;
+        }
+
+
+        public static StringDictionaryXml NumbToStrDictXml(NumberDictionaryXml source)
+        {
+            List<KeyValuePair<double, string>> r;
+            if(source.IsValueInteger) r = source.Dict.Select(it=>
+                    KeyValuePair.Create(it.Key, ((int)it.Value).ToString())).ToList();
+            else r = source.Dict.Select(it => KeyValuePair.Create(it.Key, it.Value.ToString())).ToList();
+            return new StringDictionaryXml() { Dict = r.ToList() };
         }
     }
 }

@@ -46,6 +46,8 @@
             <CommandBar.PrimaryCommands>
                 <AppBarButton Icon="Add"
                               Click="Add_Click"/>
+                <AppBarButton Icon="Add" Label="By Name"
+                              Click="AddByName_Click"/>
                 <AppBarSeparator Visibility="{x:Bind VisibilityIfSelected}"/>
                 <AppBarButton Icon="Refresh" Label="Replace"
                               Visibility="{x:Bind VisibilityIfOne}"
