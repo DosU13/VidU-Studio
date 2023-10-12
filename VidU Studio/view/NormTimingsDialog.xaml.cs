@@ -1,13 +1,11 @@
-﻿using MuzU;
-using MuzU.data;
-using MuzU.util;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using VidU.data;
+using VidU_Studio.model;
 using VidU_Studio.util;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -25,22 +23,23 @@ namespace VidU_Studio.view
 {
     public sealed partial class NormTimingsDialog : ContentDialog
     {
-        private MuzUProject MuzUProject;
+        private MuzUModel muzUModel;
 
-        public NormTimingsDialog(MuzUProject muzUProject, double startTime, double endTime)
+        public NormTimingsDialog(MuzUModel muzUModel, double startTime, double endTime)
         {
-            MuzUProject = muzUProject;
+            this.muzUModel = muzUModel;
             StartPos = startTime;
             EndPos = endTime;
             this.InitializeComponent();
         }
 
+        public MuzUModel MuzUModel => muzUModel;
         private bool IsPrimaryBtnEnabled => (!isMuzUOn || SelectedPropertyIndex != -1);
 
         private double StartPos;
         private double EndPos;
-        private TimingSequence selectedSequence;
-        private TimingSequence SelectedSequence { get=>selectedSequence; 
+        private SequenceModel selectedSequence;
+        private SequenceModel SelectedSequence { get=>selectedSequence; 
             set { selectedSequence = value;} }
         private int selectedPropertyIndex = -1;
         private int SelectedPropertyIndex { get=> selectedPropertyIndex; set { selectedPropertyIndex = value; Bindings.Update(); }}
@@ -56,13 +55,13 @@ namespace VidU_Studio.view
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
             if (IsMuzUOn){
-                var Dict = MuzUExtractor.Extract(SelectedSequence, SelectedPropertyIndex, StartPos, EndPos);
-                double minValue = Dict.Min(it => it.Value);
-                double maxValue = Dict.Max(it => it.Value);
-                if (minValue == maxValue) Result = new NumberDictionaryXml()
-                    { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, 0.0)).ToList()};
-                else Result = new NumberDictionaryXml()
-                    { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, (it.Value - minValue) / (maxValue - minValue))).ToList() };
+                //var Dict = MuzUExtractor.Extract(SelectedSequence, SelectedPropertyIndex, StartPos, EndPos);
+                //double minValue = Dict.Min(it => it.Value);
+                //double maxValue = Dict.Max(it => it.Value);
+                //if (minValue == maxValue) Result = new NumberDictionaryXml()
+                //    { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, 0.0)).ToList()};
+                //else Result = new NumberDictionaryXml()
+                //    { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, (it.Value - minValue) / (maxValue - minValue))).ToList() };
             }else Result = null;
         }
 

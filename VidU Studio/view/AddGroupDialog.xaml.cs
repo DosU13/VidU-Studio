@@ -1,12 +1,10 @@
-﻿using MuzU;
-using MuzU.data;
-using MuzU.util;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using VidU.data;
+using VidU_Studio.model;
 using VidU_Studio.util;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -24,22 +22,23 @@ namespace VidU_Studio.view
 {
     public sealed partial class AddGroupDialog : ContentDialog
     {
-        private MuzUProject MuzUProject;
+        private MuzUModel muzUModel;
 
-        public AddGroupDialog(MuzUProject muzUProject, double startTime)
+        public AddGroupDialog(MuzUModel muzUModel, double startTime)
         {
-            MuzUProject = muzUProject;
+            this.muzUModel = muzUModel;
             StartPos = startTime;
             this.InitializeComponent();
         }
 
+        public MuzUModel MuzUModel => muzUModel;
         private bool IsPrimaryBtnEnabled => (!isMuzUOn || SelectedPropertyIndex != -1);
 
         private double StartPos { get; set; } = 0;
         private double Duration => SecondsBeatConverter.ConvertBack(DurationTxtBox.Text);
         private double EndPos => StartPos + Duration;
-        private TimingSequence selectedSequence;
-        private TimingSequence SelectedSequence { get=>selectedSequence; 
+        private SequenceModel selectedSequence;
+        private SequenceModel SelectedSequence { get=>selectedSequence; 
             set { selectedSequence = value;} }
         private int selectedPropertyIndex = -1;
         private int SelectedPropertyIndex { get=> selectedPropertyIndex; 
@@ -70,7 +69,7 @@ namespace VidU_Studio.view
                 else return "";
             } }
 
-        private TimingSequence _lastSelectedSequence = null;
+        private SequenceModel _lastSelectedSequence = null;
         private bool _lastIsAutoLocate = false;
         private List<string> _properties;
         private List<string> Properties { get {
@@ -78,12 +77,14 @@ namespace VidU_Studio.view
                 _lastSelectedSequence = SelectedSequence;
                 _lastIsAutoLocate = IsAutoLocate;
                 if (SelectedSequence == null) _properties = null;
-                else if (SelectedSequence.Lyrics == null || IsAutoLocate) _properties = 
-                        SelectedSequence.TimingTemplate.Properties.Select(it=>it.Name).ToList();
-                else {
-                    _properties = new List<string>(SelectedSequence.
-                        TimingTemplate.Properties.Select(it => it.Name));
-                    _properties.Add("Lyrics");
+                else
+                {
+                    _properties = new List<string>()
+                    {
+                        "NoteNumber",
+                        "Lyrics",
+                        "Lyrics"
+                    };
                 }
                 return _properties;
             } }
@@ -93,21 +94,21 @@ namespace VidU_Studio.view
         {
             if (IsMuzUOn)
             {
-                StringDictionaryXml dict;
-                if (SelectedPropertyIndex >= SelectedSequence.TimingTemplate.Properties.Count)
-                {
-                    dict = new StringDictionaryXml()
-                    { Dict = MuzUExtractor.ExtractSyllables(SelectedSequence, StartPos, EndPos) };
-                }
-                else
-                {
-                    var n = new NumberDictionaryXml()
-                    {
-                        Dict = MuzUExtractor.Extract(SelectedSequence, SelectedPropertyIndex, StartPos, EndPos),
-                        IsValueInteger = SelectedSequence.TimingTemplate.Properties[SelectedPropertyIndex].Type == MuzU.data.ValueType.Integer
-                    };
-                    dict = StringDictionaryXml.NumbToStrDictXml(n);
-                }
+                StringDictionaryXml dict = new StringDictionaryXml();
+                //if (SelectedPropertyIndex >= SelectedSequence.TimingTemplate.Properties.Count)
+                //{
+                //    dict = new StringDictionaryXml()
+                //    { Dict = MuzUExtractor.ExtractSyllables(SelectedSequence, StartPos, EndPos) };
+                //}
+                //else
+                //{
+                //    var n = new NumberDictionaryXml()
+                //    {
+                //        Dict = MuzUExtractor.Extract(SelectedSequence, SelectedPropertyIndex, StartPos, EndPos),
+                //        IsValueInteger = SelectedSequence.TimingTemplate.Properties[SelectedPropertyIndex].Type == MuzU.data.ValueType.Integer
+                //    };
+                //    dict = StringDictionaryXml.NumbToStrDictXml(n);
+                //}
                 if (IsAutoLocate)
                 {
                     AutoSequencerClip clip = new AutoSequencerClip();

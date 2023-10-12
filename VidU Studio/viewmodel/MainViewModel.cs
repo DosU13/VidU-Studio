@@ -1,5 +1,4 @@
-﻿using MuzU;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -36,9 +35,11 @@ namespace VidU_Studio.viewmodel
                                    set { SetProperty(ref muzUPath, value);
                                          data.MuzUPath = value;}}
 
-        private MuzUProject muzUProject;
-        internal MuzUProject MuzUProject { get => muzUProject; set{
-                muzUProject = value;
+        private MuzUModel muzUModel = new MuzUModel();
+        internal MuzUModel MuzUModel { 
+            get => muzUModel; 
+            set{
+                muzUModel = value;
             } }
 
         private double bPM;
@@ -61,8 +62,8 @@ namespace VidU_Studio.viewmodel
                 if (await LoadMuzUProject(file))
                 {
                     MuzUPath = file.Path;
-                    BPM = MuzUProject.BPM;
-                    musicVM.SetMusicData(MuzUProject.data.MusicPath, MuzUProject.data.MusicAllign_μs / 1000000.0);
+                    BPM = muzUModel.BPM;
+                    musicVM.SetMusicData(muzUModel.MusicPath, muzUModel.MusicAllign_μs / 1000000.0);
                 }
                 StorageApplicationPermissions.FutureAccessList.Add(file);
             }
@@ -75,7 +76,7 @@ namespace VidU_Studio.viewmodel
             if (file == null) { return false; }
             using (var stream = await file.OpenAsync(FileAccessMode.Read))
             {
-                MuzUProject = new MuzUProject(stream.AsStream());
+                muzUModel.OpenProject(stream.AsStream());
                 return true;
             }
         }

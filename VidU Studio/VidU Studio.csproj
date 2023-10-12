@@ -11,7 +11,7 @@
     <AssemblyName>VidU Studio</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.19041.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.22621.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
@@ -24,7 +24,7 @@
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>720</HoursBetweenUpdateChecks>
-    <PackageCertificateThumbprint>ECF50A86E18A9C993023C1D238B1F04A9B577F9D</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>DE65509018D99DEC5E401BCA9EE2F732B57BE4CF</PackageCertificateThumbprint>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
@@ -130,6 +130,9 @@
     <Compile Include="Common\BindableBase.cs" />
     <Compile Include="model\CompositionModel.cs" />
     <Compile Include="model\EffectsModel.cs" />
+    <Compile Include="model\MuzUModel.cs" />
+    <Compile Include="model\PropertyModel.cs" />
+    <Compile Include="model\SequenceModel.cs" />
     <Compile Include="util\IChildItemRemove.cs" />
     <Compile Include="util\IMainPage.cs" />
     <Compile Include="util\IStoryBoard.cs" />
@@ -227,6 +230,7 @@
     <Content Include="Assets\Wide310x150Logo.scale-125.png" />
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <Content Include="model\MuzUStandard.dll" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -289,10 +293,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\MuzU Studio\MuzU\MuzU.csproj">
-      <Project>{D53EC5C1-F4BC-49D4-A442-BBFD44C61BED}</Project>
-      <Name>MuzU</Name>
-    </ProjectReference>
     <ProjectReference Include="..\VidUVideoEffects\VidUVideoEffects.csproj">
       <Project>{64c1515f-68f2-4a5b-87f2-735e8849e75b}</Project>
       <Name>VidUVideoEffects</Name>
@@ -304,6 +304,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="VidU Studio_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MuzUStandard, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>model\MuzUStandard.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

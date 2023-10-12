@@ -19,7 +19,6 @@ using Windows.Storage.Streams;
 using Windows.UI.Core.Preview;
 using Windows.Storage.AccessCache;
 using VidU;
-using MuzU;
 using Windows.Media.Core;
 using VidU_Studio.model;
 using System.ComponentModel;
@@ -153,7 +152,7 @@ namespace VidU_Studio
             double strTime;
             if (CompositionModel.Clips.Count == 0) strTime = 0.0;
             else strTime = CompositionModel.Clips.Last().EndTime;
-            dialog = new AddGroupDialog(MainVM.MuzUProject, strTime);
+            dialog = new AddGroupDialog(MainVM.MuzUModel, strTime);
             if(await dialog.ShowAsync() == ContentDialogResult.Primary)
             {
                 StoryBoardVM.AddGroup((dialog as AddGroupDialog).Result);
@@ -162,7 +161,7 @@ namespace VidU_Studio
 
         async Task<KeyValuePair<bool, NumberDictionaryXml>> ITimingCreator.NormTimingsDialog(double startTime, double endTime)
         {
-            dialog = new NormTimingsDialog(MainVM.MuzUProject, startTime, endTime);
+            dialog = new NormTimingsDialog(MainVM.MuzUModel, startTime, endTime);
             if (await dialog.ShowAsync() == ContentDialogResult.Primary)
             {
                 return KeyValuePair.Create(true,(dialog as NormTimingsDialog).Result);
