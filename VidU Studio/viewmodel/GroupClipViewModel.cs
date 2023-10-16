@@ -56,7 +56,7 @@ namespace VidU_Studio.viewmodel
         }
 
         internal List<StringViewModel> Values;
-        internal ObservableCollection<MediaViewModel> Medias = new ObservableCollection<MediaViewModel>();
+        internal ObservableCollection<MediaViewModel> MediaVMs = new ObservableCollection<MediaViewModel>();
 
         private void Medias_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
