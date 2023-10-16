@@ -63,8 +63,8 @@ namespace VidU_Studio.model
             MediaComp.BackgroundAudioTracks.Clear();
             if (musicFile == null) { UpdateComposition(); return; }
             var backgroundTrack = await BackgroundAudioTrack.CreateFromFileAsync(musicFile);
-            if (musicAllignSec < 0) backgroundTrack.TrimTimeFromStart -= TimeSpan.FromSeconds(musicAllignSec);
-            else backgroundTrack.Delay = TimeSpan.FromSeconds(musicAllignSec);
+            if (musicAllignSec > 0) backgroundTrack.TrimTimeFromStart += TimeSpan.FromSeconds(musicAllignSec);
+            else if(musicAllignSec < 0) backgroundTrack.Delay = TimeSpan.FromSeconds(-musicAllignSec);
             MediaComp.BackgroundAudioTracks.Add(backgroundTrack);
             UpdateComposition();
         }

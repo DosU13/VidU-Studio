@@ -18,10 +18,6 @@
                       x:DataType="model:SequenceModel">
             <TextBlock Text="{x:Bind Name, Mode=OneWay}"/>
         </DataTemplate>
-        <DataTemplate x:Key="TimingPropertyItemTemplate"
-                      x:DataType="model:PropertyModel">
-            <TextBlock Text="{x:Bind Name, Mode=OneWay}"/>
-        </DataTemplate>
     </ContentDialog.Resources>
     
     <Grid>
@@ -51,7 +47,6 @@
                   Header="Parameters"
                   Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"
                   ItemsSource="{x:Bind SelectedSequence.Properties, Mode=OneWay}"
-                  ItemTemplate="{StaticResource TimingPropertyItemTemplate}"
                   SelectionMode="Single"
                   SelectedIndex="{x:Bind SelectedPropertyIndex, Mode=TwoWay}"/>
     </Grid>

@@ -32,20 +32,34 @@ namespace VidU_Studio.view
         }
 
         public MuzUModel MuzUModel => muzUModel;
-        private bool IsPrimaryBtnEnabled => (!isMuzUOn || SelectedPropertyIndex != -1);
+        private bool IsPrimaryBtnEnabled => (!isMuzUOn || SelectedProperty != null);
 
         private double StartPos { get; set; } = 0;
         private double Duration => SecondsBeatConverter.ConvertBack(DurationTxtBox.Text);
         private double EndPos => StartPos + Duration;
         private SequenceModel selectedSequence;
-        private SequenceModel SelectedSequence { get=>selectedSequence; 
-            set { selectedSequence = value;} }
-        private int selectedPropertyIndex = -1;
-        private int SelectedPropertyIndex { get=> selectedPropertyIndex; 
-                            set { selectedPropertyIndex = value; Bindings.Update(); }}
+        private SequenceModel SelectedSequence { 
+            get => selectedSequence; 
+            set {
+                if (selectedSequence == value) return;
+                selectedSequence = value;
+                Bindings.Update();
+            } }
+        private string selectedProperty = null;
+        private string SelectedProperty { 
+            get=> selectedProperty; 
+            set { 
+                if (selectedProperty == value) return;
+                selectedProperty = value; 
+                Bindings.Update(); }}
 
         private bool isMuzUOn = true;
-        private bool IsMuzUOn { get => isMuzUOn; set { isMuzUOn = value; Bindings.Update(); } }
+        private bool IsMuzUOn { 
+            get => isMuzUOn; 
+            set { 
+                if(isMuzUOn == value) return;
+                isMuzUOn = value; 
+                Bindings.Update(); } }
 
         private Visibility VisibilityIfMuzUOn { get {
                 if(isMuzUOn) return Visibility.Visible;
@@ -58,7 +72,12 @@ namespace VidU_Studio.view
         private double DefaultDuration { get; set; }
 
         private bool isAutoLocate = true;
-        private bool IsAutoLocate { get=>isAutoLocate ; set { isAutoLocate = value; Bindings.Update(); } }
+        private bool IsAutoLocate { 
+            get=>isAutoLocate ; 
+            set {
+                if (isAutoLocate == value) return;
+                isAutoLocate = value; 
+                Bindings.Update(); } }
 
         private string Info { get
             {
@@ -69,25 +88,7 @@ namespace VidU_Studio.view
                 else return "";
             } }
 
-        private SequenceModel _lastSelectedSequence = null;
-        private bool _lastIsAutoLocate = false;
-        private List<string> _properties;
-        private List<string> Properties { get {
-                if (SelectedSequence == _lastSelectedSequence && IsAutoLocate == _lastIsAutoLocate) return _properties;
-                _lastSelectedSequence = SelectedSequence;
-                _lastIsAutoLocate = IsAutoLocate;
-                if (SelectedSequence == null) _properties = null;
-                else
-                {
-                    _properties = new List<string>()
-                    {
-                        "NoteNumber",
-                        "Lyrics",
-                        "Lyrics"
-                    };
-                }
-                return _properties;
-            } }
+        private List<string> Properties => SelectedSequence?.Properties;
 
         public BaseClip Result;
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -95,20 +96,34 @@ namespace VidU_Studio.view
             if (IsMuzUOn)
             {
                 StringDictionaryXml dict = new StringDictionaryXml();
-                //if (SelectedPropertyIndex >= SelectedSequence.TimingTemplate.Properties.Count)
-                //{
-                //    dict = new StringDictionaryXml()
-                //    { Dict = MuzUExtractor.ExtractSyllables(SelectedSequence, StartPos, EndPos) };
-                //}
-                //else
-                //{
-                //    var n = new NumberDictionaryXml()
-                //    {
-                //        Dict = MuzUExtractor.Extract(SelectedSequence, SelectedPropertyIndex, StartPos, EndPos),
-                //        IsValueInteger = SelectedSequence.TimingTemplate.Properties[SelectedPropertyIndex].Type == MuzU.data.ValueType.Integer
-                //    };
-                //    dict = StringDictionaryXml.NumbToStrDictXml(n);
-                //}
+                switch (SelectedProperty)
+                {
+                    case "Lyrics":
+                        dict = new StringDictionaryXml()
+                        { Dict = SelectedSequence.GetLyrics(StartPos, EndPos) };
+                        break;
+                    case "Note":
+                        {
+                            var n = new NumberDictionaryXml()
+                            {
+                                Dict = SelectedSequence.GetNotes(StartPos, EndPos),
+                                IsValueInteger = true
+                            };
+                            dict = StringDictionaryXml.NumbToStrDictXml(n);
+                            break;
+                        }
+
+                    case "Length":
+                        {
+                            var n = new NumberDictionaryXml()
+                            {
+                                Dict = SelectedSequence.GetLengths(StartPos, EndPos),
+                                IsValueInteger = false
+                            };
+                            dict = StringDictionaryXml.NumbToStrDictXml(n);
+                            break;
+                        }
+                }
                 if (IsAutoLocate)
                 {
                     AutoSequencerClip clip = new AutoSequencerClip();
@@ -122,11 +137,6 @@ namespace VidU_Studio.view
                 else Result = new SequencerClip() { TimingsWithValues = dict };
                 Result.Duration = Duration;
             }
-        }
-
-        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Bindings.Update();
         }
     }
 }

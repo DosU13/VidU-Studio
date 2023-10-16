@@ -18,10 +18,6 @@
                       x:DataType="model:SequenceModel">
             <TextBlock Text="{x:Bind Name, Mode=OneWay}"/>
         </DataTemplate>
-        <DataTemplate x:Key="TimingPropertyItemTemplate"
-                      x:DataType="model:PropertyModel">
-            <TextBlock Text="{x:Bind Name, Mode=OneWay}"/>
-        </DataTemplate>
     </ContentDialog.Resources>
     
     <Grid>
@@ -71,7 +67,6 @@
                   ItemsSource="{x:Bind MuzUModel.Sequences, Mode=OneWay}"
                   ItemTemplate="{StaticResource TimingSequenceItemTemplate}"
                   SelectionMode="Single"
-                  SelectionChanged="ListView_SelectionChanged"
                   SelectedItem="{x:Bind SelectedSequence, Mode=TwoWay}"/>
 
         <ListView Grid.Row="3" Grid.Column="1" Margin="5"
@@ -79,6 +74,6 @@
                   Visibility="{x:Bind VisibilityIfMuzUOn, Mode=OneWay}"
                   ItemsSource="{x:Bind Properties, Mode=OneWay}"
                   SelectionMode="Single"
-                  SelectedIndex="{x:Bind SelectedPropertyIndex, Mode=TwoWay}"/>
+                  SelectedItem="{x:Bind SelectedProperty, Mode=TwoWay}"/>
     </Grid>
 </ContentDialog>

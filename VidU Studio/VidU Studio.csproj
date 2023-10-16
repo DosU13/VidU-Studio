@@ -128,10 +128,10 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common\BindableBase.cs" />
+    <Compile Include="Common\RelayCommand.cs" />
     <Compile Include="model\CompositionModel.cs" />
     <Compile Include="model\EffectsModel.cs" />
     <Compile Include="model\MuzUModel.cs" />
-    <Compile Include="model\PropertyModel.cs" />
     <Compile Include="model\SequenceModel.cs" />
     <Compile Include="util\IChildItemRemove.cs" />
     <Compile Include="util\IMainPage.cs" />

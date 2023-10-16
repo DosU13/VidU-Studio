@@ -25,7 +25,6 @@ namespace VidU_Studio.viewmodel
         protected internal ClipViewModel(BaseClip data, IStoryBoard storyBoard)
         {
             Data = data;
-            duration = data.Duration;
             StoryBoard = storyBoard;
             foreach (var e in data.Effects) EffectVMs.Add(
                 new EffectViewModel(e, StoryBoard, StartTime, EndTime, this));
@@ -52,13 +51,13 @@ namespace VidU_Studio.viewmodel
             }
         }
 
-        private double duration;
         internal double Duration
         {
-            get => duration;
+            get => Data.Duration;
             set
             {
-                SetProperty(ref duration, value);
+                if (Data.Duration == value) return;
+                OnPropertyChanged();
                 Data.Duration = value;
                 StoryBoard.UpdateComposition();
             }

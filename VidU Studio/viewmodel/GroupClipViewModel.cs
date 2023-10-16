@@ -16,6 +16,7 @@ using Windows.Media.Effects;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Popups;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace VidU_Studio.viewmodel
@@ -25,7 +26,7 @@ namespace VidU_Studio.viewmodel
         internal GroupClipViewModel(BaseClip groupClip, IStoryBoard storyBoard): 
             base(groupClip, storyBoard)
         {
-            if (Data is SequencerClip)
+            if (Data is SequencerClip sequencerClip)
                Values = (Data as SequencerClip).TimingsWithValues.Dict.Select(it => 
                         new StringViewModel(it.Value)).ToList();
             else Values = (Data as AutoSequencerClip).Values.Select(it=>
@@ -33,16 +34,16 @@ namespace VidU_Studio.viewmodel
             InitMedias();
         }
 
-        private bool MediasReady = false;
+        private bool InitMediasCompleted = false;
         private async void InitMedias()
         {
-            foreach (var m in DataMedias)
+            foreach (var media in DataMedias)
             {
-                Medias.Add(await MediaViewModel.Create(m));
+                Medias.Add(await MediaViewModel.Create(media));
             }
             OnPropertyChanged(nameof(Thumbnail));
             Medias.CollectionChanged += Medias_CollectionChanged;
-            MediasReady = true;
+            InitMediasCompleted = true;
         }
 
         public List<Media> DataMedias
@@ -56,7 +57,7 @@ namespace VidU_Studio.viewmodel
         }
 
         internal List<StringViewModel> Values;
-        internal ObservableCollection<MediaViewModel> MediaVMs = new ObservableCollection<MediaViewModel>();
+        internal ObservableCollection<MediaViewModel> Medias = new ObservableCollection<MediaViewModel>();
 
         private void Medias_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -81,45 +82,70 @@ namespace VidU_Studio.viewmodel
         private bool CompositionFreeze = false;
         internal async void AddFilesByName(List<StorageFile> files)
         {
+            Dictionary<string, StorageFile> filesDict = 
+                files.ToDictionary(x => Path.GetFileNameWithoutExtension(x.DisplayName));
             List<string> notFound = new List<string>();
             var values = Values.Select(it => it.Str).ToList();
             CompositionFreeze = true;
             while (Medias.Count < Values.Count) Medias.Add(new MediaViewModel());
-            int wordLen = 0;
             for(int i=0; i<values.Count(); i++)
             {
-                wordLen++;
-                if (values[i].Contains('_')||i==values.Count-1)
+                if (filesDict.TryGetValue(values[i], out StorageFile file)){
+                    Medias.RemoveAt(i);
+                    Medias.Insert(i, new MediaViewModel(file));
+                }
+                else
                 {
-                    var word = values.GetRange(i+1 - wordLen, wordLen).Aggregate((a,b)=>a+b);
-                    word = word.Replace("_", "").ToLower();
-                    var f = files.Find(it => Path.GetFileNameWithoutExtension(it.DisplayName)
-                                        .ToLower() == word);
-                    if (f != null)
-                    {
-                        for (int j = 0; j < wordLen; j++)
-                        {
-                            Medias.RemoveAt(i + 1 - wordLen+j);
-                            Medias.Insert(i + 1 - wordLen+j, new MediaViewModel(f));
-                        }
-                    }else notFound.Add(word);
-                    wordLen = 0;
+                    notFound.Add(values[i]);
                 }
             }
             if (notFound.Count != 0) {
-                ContentDialog dialog = new ContentDialog();
-                dialog.Title = notFound.Count + " words not found: ";
-                TextBlock txt = new TextBlock();
-                txt.Text = String.Join("; ", notFound.Distinct());
-                txt.IsTextSelectionEnabled = true;
-                txt.TextWrapping = Windows.UI.Xaml.TextWrapping.WrapWholeWords;
-                dialog.Content = txt;
-                dialog.CloseButtonText = "OK";
-                await dialog.ShowAsync();
+                
+                await ListWords(notFound).ShowAsync();
             }
             CompositionFreeze = false;
             StoryBoard.UpdateComposition();
         }
+
+        private ContentDialog ListWords(List<string> words)
+        {
+            ContentDialog dialog = new ContentDialog();
+            dialog.Title = words.Count + " words not found: ";
+
+            StackPanel contentPanel = new StackPanel();
+
+            TextBlock txt = new TextBlock
+            {
+                Text = string.Join("; ", words.Distinct()),
+                IsTextSelectionEnabled = true,
+                TextWrapping = TextWrapping.WrapWholeWords
+            };
+
+            contentPanel.Children.Add(txt);
+
+            Button openImagesButton = new Button();
+            openImagesButton.Content = "Open Google Images";
+            openImagesButton.Click += (e, arg) => 
+                OpenImagesOnGoogle(words.Where(x => !x.Contains('_')).ToList()); 
+
+            contentPanel.Children.Add(openImagesButton); 
+
+            dialog.Content = contentPanel; 
+
+            dialog.CloseButtonText = "OK";
+            return dialog;
+        }
+
+        private async void OpenImagesOnGoogle(List<string> words)
+        {
+            foreach (string word in words)
+            {
+                string googleImagesURL = $"https://www.google.com/search?q={Uri.EscapeDataString(word)}&tbm=isch&tbs=isz:l";
+                Uri uri = new Uri(googleImagesURL);
+                await Windows.System.Launcher.LaunchUriAsync(uri);
+            }
+        }
+
 
         public void AddFiles(IReadOnlyList<StorageFile> files)
         {
@@ -138,7 +164,10 @@ namespace VidU_Studio.viewmodel
 
         internal override async Task<List<MediaClip>> CreateMediaClipsAsync()
         {
-            if (!MediasReady) return null;
+            if (!InitMediasCompleted)
+            {
+                return null;
+            }
             if(Data is AutoSequencerClip)
             {
                 var auto = Data as AutoSequencerClip;
@@ -168,7 +197,6 @@ namespace VidU_Studio.viewmodel
                 media = Medias[seq.TimingsWithValues.Dict.Count-1];
                 dur = EndTime - seq.TimingsWithValues.Dict.Last().Key;
                 result.Add(await media.CreateMediaClip(dur));
-                if (IsLyrics) UpdateRotationEffect(result);
                 return result;
             }
             return new List<MediaClip>{MediaClip
@@ -177,20 +205,5 @@ namespace VidU_Studio.viewmodel
 
         public bool IsLyrics { get { return !double.TryParse
                     (Values.Find(it => it.Str != "").Str, out double _); } }
-
-        private void UpdateRotationEffect(List<MediaClip> result)
-        {
-            int side = 1;
-            for(int i = 1; i<Values.Count; i++)
-            {
-                if (!Values[i - 1].Str.Contains('_'))
-                {
-                    var lyrRot = new VideoEffectDefinition("VidUVideoEffects.LyricsRotation",
-                        new PropertySet { { "side", side } });
-                    result[i].VideoEffectDefinitions.Add(lyrRot);
-                    side *= -1;
-                }
-            }
-        }
     }
 }
