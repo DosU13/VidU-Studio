@@ -55,14 +55,28 @@ namespace VidU_Studio.view
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
             if (IsMuzUOn){
-                //var Dict = MuzUExtractor.Extract(SelectedSequence, SelectedPropertyIndex, StartPos, EndPos);
-                //double minValue = Dict.Min(it => it.Value);
-                //double maxValue = Dict.Max(it => it.Value);
-                //if (minValue == maxValue) Result = new NumberDictionaryXml()
-                //    { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, 0.0)).ToList()};
-                //else Result = new NumberDictionaryXml()
-                //    { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, (it.Value - minValue) / (maxValue - minValue))).ToList() };
-            }else Result = null;
+                long start_microsec = (long)(StartPos * 1_000_000);
+                long end_microsec = (long)(StartPos * 1_000_000);
+                List<KeyValuePair<double, double>> Dict = new List<KeyValuePair<double, double>>();
+                switch (SelectedSequence.Properties[SelectedPropertyIndex])
+                {
+                    case "Note":
+                        Dict = SelectedSequence.GetNotes(StartPos, EndPos);
+                        break;
+                    case "Length":
+                        Dict = SelectedSequence.GetLengths(StartPos, EndPos);
+                        break;
+                    case "Lyrics":
+                        throw new NotSupportedException();
+                }
+                double minValue = Dict.Min(it => it.Value);
+                double maxValue = Dict.Max(it => it.Value);
+                if (minValue == maxValue) Result = new NumberDictionaryXml()
+                { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, 0.0)).ToList() };
+                else Result = new NumberDictionaryXml()
+                { Dict = Dict.Select(it => KeyValuePair.Create(it.Key, (it.Value - minValue) / (maxValue - minValue))).ToList() };
+            }
+            else Result = null;
         }
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
