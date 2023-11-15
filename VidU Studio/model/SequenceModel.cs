@@ -35,6 +35,7 @@ namespace VidU_Studio.model
             int iter = 1;
             foreach(var n in _sequence.NodeList)
             {
+                if (n.Lyrics == null) continue;
                 var time = n.Time / 1_000_000.0;
                 if (startPos <= time && time < endPos)
                 {
